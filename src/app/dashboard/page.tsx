@@ -21,7 +21,7 @@ export default function DashboardOverviewPage() {
   return (
     <div className="flex-1 overflow-auto p-4">
       <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your Dashboard Overview</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
         <p className="text-gray-600">A quick glance at your key financial metrics and activities.</p>
 
         <Separator />
@@ -105,16 +105,6 @@ export default function DashboardOverviewPage() {
               <Button variant="link" className="px-0 mt-4">Go to Financial Management</Button>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Optional Sign Out Button */}
-        <div className="mt-8 text-right">
-          <Button
-            variant="outline"
-            onClick={() => signOut({ callbackUrl: "/" })}
-          >
-            Sign Out
-          </Button>
         </div>
       </div>
     </div>

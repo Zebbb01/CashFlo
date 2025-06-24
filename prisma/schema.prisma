@@ -60,3 +60,24 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model AssetManagement {
+  id          String   @id @default(cuid())
+  assetType   String
+  companyId   String
+  assetName   String
+  assetValue  Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  assets      AssetManagement[]
+}

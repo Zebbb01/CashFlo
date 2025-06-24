@@ -1,27 +1,40 @@
 // src/app/dashboard/data-visualization/page.tsx
 "use client"
 
-import { Session } from "next-auth" // Assuming you still need session for the welcome card
-import { signOut } from "next-auth/react" // Keep signOut for the button
+import { useSession, signOut } from "next-auth/react" // Import useSession
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { useEffect } from "react" // Keep useState and useEffect if you plan to fetch other data
+import { Spinner } from "@/components/ui/spinner"
 
-// If you pass session as a prop to this page, you'd need to fetch it here in a client component
-// or pass it from a server component if this were a direct page.
-// However, since it's now a nested route, the session might be fetched higher up
-// and contextually provided, or you can refetch it here if needed.
-// For this example, I'll assume session is available via prop for the Welcome Card,
-// but for real data, you might need a client-side fetch or a parent server component.
+export default function DataVisualizationPage() {
+  // Use the useSession hook to get the session data
+  const { data: session, status } = useSession();
 
-interface DataVisualizationPageProps {
-  session?: Session; // Make session optional if it's not always passed directly
-}
+  useEffect(() => {
+  }, [status, session]); // Dependencies for this useEffect
 
-export default function DataVisualizationPage({ session }: DataVisualizationPageProps) {
-  // Mock session data if not passed or for local development
-  const currentSession = session || { user: { name: "Guest User", email: "guest@example.com", id: "123" } };
+  // Render a loading state while session is being fetched
+  if (status === "loading") {
+    return (
+      <div className="flex-1 overflow-auto p-4 flex justify-center items-center">
+        <Spinner />
+      </div>
+    );
+  }
 
+  // Render a message if not authenticated
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex-1 overflow-auto p-4 flex flex-col justify-center items-center text-center">
+        <p className="text-lg text-red-500 mb-4">You need to be logged in to view this page.</p>
+        <Button onClick={() => signOut()}>Sign Out / Go to Login</Button>
+      </div>
+    );
+  }
+
+  // Once authenticated, render the dashboard content
   return (
     <div className="flex-1 overflow-auto p-4">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -30,7 +43,7 @@ export default function DataVisualizationPage({ session }: DataVisualizationPage
 
         <Separator />
 
-        {/* Existing Welcome Card from DashboardClient */}
+        {/* Displaying actual session data */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Welcome to CashFlo</CardTitle>
@@ -40,9 +53,13 @@ export default function DataVisualizationPage({ session }: DataVisualizationPage
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p><strong>Name:</strong> {currentSession.user?.name}</p>
-              <p><strong>Email:</strong> {currentSession.user?.email}</p>
-              <p><strong>User ID:</strong> {currentSession.user?.id}</p>
+              <p><strong>Name:</strong> {session?.user?.name || "N/A"}</p>
+              <p><strong>Email:</strong> {session?.user?.email || "N/A"}</p>
+              <p><strong>User ID:</strong> {session?.user?.id || "N/A"}</p>
+              {/* You might also display image if available */}
+              {session?.user?.image && (
+                <p><strong>Avatar:</strong> <img src={session.user.image} alt="User Avatar" className="h-8 w-8 rounded-full inline-block ml-2" /></p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -152,16 +169,6 @@ export default function DataVisualizationPage({ session }: DataVisualizationPage
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Sign Out Button - placed here within the page for easy access */}
-        <div className="mt-8 text-right">
-          <Button
-            variant="outline"
-            onClick={() => signOut({ callbackUrl: "/" })}
-          >
-            Sign Out
-          </Button>
         </div>
       </div>
     </div>
