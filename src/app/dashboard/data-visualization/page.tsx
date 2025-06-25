@@ -72,7 +72,7 @@ export default function DataVisualizationPage() {
               <CardDescription>Current value of all your assets.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">$1,234,567.89</p>
+              <p className="text-2xl font-semibold">₱1,234,567.89</p>
             </CardContent>
           </Card>
 
@@ -82,7 +82,7 @@ export default function DataVisualizationPage() {
               <CardDescription>Income generated this month.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">$55,123.45</p>
+              <p className="text-2xl font-semibold">₱55,123.45</p>
             </CardContent>
           </Card>
 
@@ -92,7 +92,7 @@ export default function DataVisualizationPage() {
               <CardDescription>All expenditures this month.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-red-600">-$21,987.65</p>
+              <p className="text-2xl font-semibold text-red-600">-₱21,987.65</p>
             </CardContent>
           </Card>
 
@@ -102,7 +102,7 @@ export default function DataVisualizationPage() {
               <CardDescription>Revenue minus expenses.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-green-600">$33,135.80</p>
+              <p className="text-2xl font-semibold text-green-600">₱33,135.80</p>
             </CardContent>
           </Card>
         </div>
