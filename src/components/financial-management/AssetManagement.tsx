@@ -2,35 +2,48 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   useAssets,
-  useCreateAsset,
   useDeleteAsset,
   useUpdateAsset,
-} from "@/hooks/useAssets";
-import { useCompanies } from "@/hooks/useCompanies";
+} from "@/hooks/financial-management/useAssets";
+import { useCompanies } from "@/hooks/financial-management/useCompanies";
 import { Asset } from "@/types";
 
+// Import the new modal components and DataTable
+import { AddCompanyModal } from "./modals/AssetManagement/AddCompanyModal";
+import { AddAssetModal } from "./modals/AssetManagement/AddAssetModal";
+import { EditAssetModal } from "./modals/AssetManagement/EditAssetModal";
+import { ViewAssetModal } from "./modals/AssetManagement/ViewAssetModal";
+import { DataTable } from "@/components/data-table"; // Adjust path if needed
+
+// Import AlertDialog components
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 export function AssetManagement() {
-  const [newAssetType, setNewAssetType] = useState("");
-  const [newAssetName, setNewAssetName] = useState("");
-  const [newAssetValue, setNewAssetValue] = useState<string>("");
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
+  const [isEditAssetModalOpen, setIsEditAssetModalOpen] = useState(false);
+  const [isViewAssetModalOpen, setIsViewAssetModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null); // For edit/view modals
+
+  // State for the delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [assetToDeleteId, setAssetToDeleteId] = useState<string | null>(null);
 
   const { data: assets, isLoading: isLoadingAssets, error: assetsError } = useAssets();
-  const { data: companies, isLoading: isLoadingCompanies, error: companiesError } = useCompanies();
+  const { error: companiesError } = useCompanies();
 
-  const createAssetMutation = useCreateAsset();
   const updateAssetMutation = useUpdateAsset();
   const deleteAssetMutation = useDeleteAsset();
 
@@ -47,42 +60,6 @@ export function AssetManagement() {
     }
   }, [assetsError, companiesError]);
 
-  const handleAddAsset = async () => {
-    if (!newAssetType || !newAssetName || !newAssetValue || !selectedCompanyId) {
-      toast.warning("Missing Fields", {
-        description: "Please fill in all asset fields and select a company.",
-      });
-      return;
-    }
-    const parsedAssetValue = parseFloat(newAssetValue);
-    if (isNaN(parsedAssetValue)) {
-      toast.error("Invalid Input", {
-        description: "Asset value must be a valid number.",
-      });
-      return;
-    }
-
-    try {
-      await createAssetMutation.mutateAsync({
-        assetType: newAssetType,
-        assetName: newAssetName,
-        assetValue: parsedAssetValue,
-        companyId: selectedCompanyId,
-      });
-      toast.success("Asset Added", {
-        description: "Your new asset has been successfully added.",
-      });
-      setNewAssetType("");
-      setNewAssetName("");
-      setNewAssetValue("");
-      setSelectedCompanyId("");
-    } catch (error: any) {
-      toast.error("Failed to add asset", {
-        description: error.message || "An unexpected error occurred.",
-      });
-    }
-  };
-
   const handleToggleSoftDelete = async (asset: Asset) => {
     try {
       await updateAssetMutation.mutateAsync({
@@ -90,7 +67,9 @@ export function AssetManagement() {
         payload: { softDelete: asset.deletedAt === null ? true : false },
       });
       toast.info("Asset Status Updated", {
-        description: `Asset "${asset.assetName}" ${asset.deletedAt === null ? "soft-deleted" : "restored"}.`,
+        description: `Asset "${asset.assetName}" ${
+          asset.deletedAt === null ? "soft-deleted" : "restored"
+        }.`,
       });
     } catch (error: any) {
       toast.error("Failed to update asset status", {
@@ -99,145 +78,173 @@ export function AssetManagement() {
     }
   };
 
-  const handleHardDeleteAsset = async (assetId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this asset? This action cannot be undone.")) {
-      return;
-    }
+  // Function to initiate the delete process by opening the dialog
+  const handleDeleteClick = (assetId: string) => {
+    setAssetToDeleteId(assetId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Function to handle the actual hard delete after confirmation
+  const handleConfirmDelete = async () => {
+    if (!assetToDeleteId) return;
+
     try {
-      await deleteAssetMutation.mutateAsync(assetId);
+      await deleteAssetMutation.mutateAsync(assetToDeleteId);
       toast.success("Asset Deleted", {
         description: "The asset has been permanently deleted.",
       });
+      setIsDeleteDialogOpen(false); // Close the dialog on success
+      setAssetToDeleteId(null); // Clear the ID
     } catch (error: any) {
       toast.error("Failed to delete asset", {
         description: error.message || "An unexpected error occurred.",
       });
+      setIsDeleteDialogOpen(false); // Close the dialog even on error
+      setAssetToDeleteId(null); // Clear the ID
     }
   };
+
+  const handleEditAsset = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setIsEditAssetModalOpen(true);
+  };
+
+  const handleViewAsset = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setIsViewAssetModalOpen(true);
+  };
+
+  // Define columns for the DataTable
+  const assetColumns = [
+    {
+      header: "Asset Name",
+      accessorKey: "assetName",
+      // Corrected cell function: it receives the `Asset` object directly
+      cell: (asset: Asset) => asset.assetName,
+    },
+    {
+      header: "Type",
+      accessorKey: "assetType",
+      // Corrected cell function
+      cell: (asset: Asset) => asset.assetType,
+    },
+    {
+      header: "Company",
+      accessorKey: "company.name",
+      // Corrected cell function
+      cell: (asset: Asset) => asset.company?.name || "N/A",
+    },
+    {
+      header: "Value",
+      accessorKey: "assetValue",
+      // Corrected cell function
+      cell: (asset: Asset) => (
+        <span>₱{asset.assetValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      ),
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      // Corrected cell function
+      cell: (asset: Asset) => (
+        asset.deletedAt ? (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Soft-Deleted</span>
+        ) : (
+          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+        )
+      ),
+    },
+    {
+      header: "Actions",
+      // Corrected cell function: it receives the `Asset` object directly
+      cell: (asset: Asset) => (
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={() => handleViewAsset(asset)}>
+            View
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleEditAsset(asset)}>
+            Edit
+          </Button>
+          {/* <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleToggleSoftDelete(asset)}
+            disabled={updateAssetMutation.isPending}
+          >
+            {asset.deletedAt ? "Restore" : "Soft Delete"}
+          </Button> */}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleDeleteClick(asset.id)} // Use the new handler here
+            disabled={deleteAssetMutation.isPending}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Asset Management</CardTitle>
-        <CardDescription>Add and track your assets.</CardDescription>
+        <CardDescription>Add and track your assets and associated companies.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="newAssetType">Asset Type</Label>
-            <Input
-              id="newAssetType"
-              placeholder="e.g., Real Estate, Stocks"
-              value={newAssetType}
-              onChange={(e) => setNewAssetType(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="newAssetName">Asset Name</Label>
-            <Input
-              id="newAssetName"
-              placeholder="e.g., House, Tesla Shares"
-              value={newAssetName}
-              onChange={(e) => setNewAssetName(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="newAssetValue">Asset Value</Label>
-            <Input
-              id="newAssetValue"
-              type="number"
-              placeholder="e.g., 500000"
-              value={newAssetValue}
-              onChange={(e) => setNewAssetValue(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="company">Company</Label>
-            {isLoadingCompanies ? (
-              <p>Loading companies...</p>
-            ) : companies && companies.length > 0 ? (
-              <Select onValueChange={setSelectedCompanyId} value={selectedCompanyId}>
-                <SelectTrigger id="company">
-                  <SelectValue placeholder="Select a company" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <p className="text-muted-foreground">No companies available. Please add a company first.</p>
-            )}
-          </div>
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <Button onClick={() => setIsCompanyModalOpen(true)}>Add New Company</Button>
+          <Button onClick={() => setIsAssetModalOpen(true)}>Add New Asset</Button>
         </div>
-        <Button
-          onClick={handleAddAsset}
-          className="mt-4"
-          disabled={createAssetMutation.isPending || isLoadingCompanies || !companies || companies.length === 0}
-        >
-          {createAssetMutation.isPending ? "Adding Asset..." : "Add Asset"}
-        </Button>
 
         <h3 className="text-lg font-semibold mt-6 mb-2">Current Assets</h3>
-        {isLoadingAssets ? (
-          <p>Loading assets...</p>
-        ) : assets && assets.length > 0 ? (
-          <div className="border rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {assets.map((asset) => (
-                  <tr key={asset.id} className={asset.deletedAt ? "bg-red-50 opacity-70" : ""}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{asset.assetName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{asset.assetType}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{asset.company?.name || "N/A"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₱{asset.assetValue.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {asset.deletedAt ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Soft-Deleted</span>
-                      ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleSoftDelete(asset)}
-                        disabled={updateAssetMutation.isPending}
-                      >
-                        {asset.deletedAt ? "Restore" : "Soft Delete"}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleHardDeleteAsset(asset.id)}
-                        disabled={deleteAssetMutation.isPending}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="p-3 text-muted-foreground">No assets found. Add your first asset above!</p>
-        )}
+        <DataTable
+          columns={assetColumns}
+          data={assets || []}
+          isLoading={isLoadingAssets}
+          noDataMessage="No assets found. Add your first asset above!"
+        />
       </CardContent>
+
+      {/* Modals */}
+      <AddCompanyModal
+        isOpen={isCompanyModalOpen}
+        onClose={() => setIsCompanyModalOpen(false)}
+      />
+      <AddAssetModal
+        isOpen={isAssetModalOpen}
+        onClose={() => setIsAssetModalOpen(false)}
+      />
+      <EditAssetModal
+        isOpen={isEditAssetModalOpen}
+        onClose={() => setIsEditAssetModalOpen(false)}
+        asset={selectedAsset}
+      />
+      <ViewAssetModal
+        isOpen={isViewAssetModalOpen}
+        onClose={() => setIsViewAssetModalOpen(false)}
+        asset={selectedAsset}
+      />
+
+      {/* Delete Confirmation AlertDialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your asset and remove its
+              data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

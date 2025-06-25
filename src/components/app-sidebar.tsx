@@ -68,12 +68,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ],
       },
       {
-        title: "Financial Management",
+        title: "Budget & Finances",
         url: "/dashboard/financial-management",
         icon: Calculator,
         items: [
           {
-            title: "Monitoring",
+            title: "Financial Management",
             url: "/dashboard/financial-management",
           },
           {

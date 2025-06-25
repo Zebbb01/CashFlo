@@ -11,8 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CheckCircle, Eye, EyeOff } from "lucide-react"
 
 // Import the new hooks
-import { useSignIn } from "@/hooks/useSignIn"
-import { useSignUp } from "@/hooks/useSignUp"
+import { useSignIn } from "@/hooks/auth/useSignIn"
+import { useSignUp } from "@/hooks/auth/useSignUp"
 
 export function LoginForm({
   className,

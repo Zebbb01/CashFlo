@@ -85,7 +85,7 @@ export function WithdrawalHistory() {
               {withdrawalHistory.map((item) => (
                 <li key={item.id} className="p-3 flex justify-between items-center">
                   <span>{item.date}: {item.description}</span>
-                  <span className="font-medium text-red-600">-₱{item.amount.toFixed(2)}</span>
+                  <span className="font-medium text-red-600">-₱{item.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </li>
               ))}
             </ul>

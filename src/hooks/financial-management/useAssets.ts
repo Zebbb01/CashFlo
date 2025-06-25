@@ -1,6 +1,7 @@
-// src/hooks/useAssets.ts
+// src/hooks/financial-management/useAssets.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Asset, CreateAssetPayload, UpdateAssetPayload } from "@/types";
+import { TOTALS_QUERY_KEY } from "./useRevenueCost";
 
 const ASSET_QUERY_KEY = "assets";
 
@@ -86,6 +87,7 @@ export const useCreateAsset = () => {
     mutationFn: createAsset,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] }); // Invalidate to refetch all assets
+      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] }); // Invalidate totals on new asset
     },
   });
 };
@@ -97,6 +99,7 @@ export const useUpdateAsset = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] }); // Invalidate all assets
       queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY, variables.id] }); // Invalidate specific asset
+      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] }); // Invalidate totals on asset update
     },
   });
 };
@@ -107,6 +110,7 @@ export const useDeleteAsset = () => {
     mutationFn: deleteAsset,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [ASSET_QUERY_KEY] }); // Invalidate to refetch all assets
+      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] }); // Invalidate totals on asset delete
     },
   });
 };

@@ -1,4 +1,4 @@
-// src/hooks/useCompanies.ts
+// src/hooks/financial-management/useCompanies.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Company, CreateCompanyPayload, UpdateCompanyPayload } from "@/types";
 

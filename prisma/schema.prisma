@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -51,6 +52,9 @@ model User {
   sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  // Add relations for Revenue and Cost if a user is associated with them
+  revenues      Revenue[]
+  costs         Cost[]
 }
 
 model VerificationToken {
@@ -62,22 +66,61 @@ model VerificationToken {
 }
 
 model AssetManagement {
-  id          String   @id @default(cuid())
-  assetType   String
-  companyId   String
-  assetName   String
-  assetValue  Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  assetType  String
+  companyId  String
+  assetName  String
+  assetValue Float
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // Add relations back to Revenue and Cost
+  revenues   Revenue[]
+  costs      Cost[]
 }
 
 model Company {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   assets      AssetManagement[]
+  revenues    Revenue[] // Companies can have associated revenue
+  costs       Cost[] // Companies can have associated costs
+}
+
+// New model for Revenue entries
+model Revenue {
+  id          String           @id @default(cuid())
+  source      String // e.g., "Sales", "Investment Income", "Service Fee"
+  amount      Float
+  date        DateTime         @default(now())
+  description String?
+  companyId   String? // Optional: Link revenue to a specific company
+  company     Company?         @relation(fields: [companyId], references: [id])
+  userId      String? // Optional: Link revenue to a specific user (if applicable)
+  user        User?            @relation(fields: [userId], references: [id])
+  assetId     String? // Optional: Link revenue to a specific asset
+  asset       AssetManagement? @relation(fields: [assetId], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+// New model for Cost entries
+model Cost {
+  id          String           @id @default(cuid())
+  category    String // e.g., "Rent", "Salaries", "Utilities", "Supplies"
+  amount      Float
+  date        DateTime         @default(now())
+  description String?
+  companyId   String? // Optional: Link cost to a specific company
+  company     Company?         @relation(fields: [companyId], references: [id])
+  userId      String? // Optional: Link cost to a specific user (if applicable)
+  user        User?            @relation(fields: [userId], references: [id])
+  assetId     String? // Optional: Link cost to a specific asset
+  asset       AssetManagement? @relation(fields: [assetId], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
