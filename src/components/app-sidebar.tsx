@@ -78,11 +78,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Assets & Liabilities",
-            url: "/dashboard/financial-management/assets",
+            url: "/dashboard/financial-management/financial-assets",
+          },
+          {
+            title: "Withdrawal History & Costs",
+            url: "/dashboard/financial-management/financial-withdrawals",
           },
           {
             title: "Colleague Contributions",
-            url: "/dashboard/financial-management/colleagues",
+            url: "/dashboard/financial-management/financial-colleagues",
           },
         ],
       },
