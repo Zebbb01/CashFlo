@@ -2,8 +2,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import Link from "next/link" // Import Link
-
+import Link from "next/link"
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,32 +18,31 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import React from "react" // Ensure React is imported
+import React from "react"
 
 export function NavMain({
   items,
-  groupLabel, // New prop for the group label
+  groupLabel,
 }: {
   items: {
     title: string
-    url: string
+    url?: string | null | undefined
     icon?: LucideIcon
     isActive?: boolean
     items?: {
       title: string
-      url: string
+      url?: string | null | undefined
     }[]
   }[]
-  groupLabel?: string // Define the new prop type
+  groupLabel?: string
 }) {
   return (
     <SidebarGroup>
-      {groupLabel && <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>} {/* Conditionally render label */}
+      {groupLabel && <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>}
       <SidebarMenu>
         {items.map((item) => (
           <React.Fragment key={item.title}>
             {item.items && item.items.length > 0 ? (
-              // Renders as a Collapsible (dropdown) if it has sub-items
               <Collapsible
                 asChild
                 defaultOpen={item.isActive}
@@ -63,7 +61,8 @@ export function NavMain({
                       {item.items.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild>
-                            <Link href={subItem.url}>
+                            {/* FIX: Ensure subItem.url is always a string for href */}
+                            <Link href={subItem.url ?? "#"}>
                               <span>{subItem.title}</span>
                             </Link>
                           </SidebarMenuSubButton>
@@ -74,10 +73,10 @@ export function NavMain({
                 </SidebarMenuItem>
               </Collapsible>
             ) : (
-              // Renders as a direct link if it has no sub-items
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip={item.title}>
-                  <Link href={item.url}>
+                  {/* FIX: Ensure item.url is always a string for href */}
+                  <Link href={item.url ?? "#"}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                   </Link>

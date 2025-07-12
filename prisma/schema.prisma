@@ -1,9 +1,6 @@
 // prisma/schema.prisma
 // This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// learn more about the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -52,9 +49,20 @@ model User {
   sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  // Add relations for Revenue and Cost if a user is associated with them
+  
+  // Original relations
   revenues      Revenue[]
   costs         Cost[]
+  
+  // New: Colleague relationships
+  assetPartnerships     AssetPartnership[]
+  revenueShares        RevenueShare[]
+  costAttributions     CostAttribution[]
+  
+  // Partnership invitations
+  sentInvitations      PartnershipInvitation[] @relation("InvitationSender")
+  receivedInvitations  PartnershipInvitation[] @relation("InvitationReceiver")
+  ownedAssets           AssetManagement[] @relation("AssetOwner")
 }
 
 model VerificationToken {
@@ -65,19 +73,38 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Bank {
+  id        String            @id @default(cuid())
+  name      String            @unique
+  assets    AssetManagement[] @relation("BankAssets")
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
 model AssetManagement {
-  id         String    @id @default(cuid())
-  assetType  String
-  companyId  String
-  assetName  String
-  assetValue Float
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
-  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  // Add relations back to Revenue and Cost
-  revenues   Revenue[]
-  costs      Cost[]
+  id          String    @id @default(cuid())
+  assetType   String
+  companyId   String
+  assetName   String
+  assetValue  Float?
+  bankId      String?
+  userId        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bank              Bank?           @relation("BankAssets", fields: [bankId], references: [id])
+  owner           User?           @relation("AssetOwner", fields: [userId], references: [id])
+  revenuesForBank   Revenue[]       @relation("BankAssetRevenues")
+  costsForBank      Cost[]          @relation("BankAssetCosts")
+  
+  // New: Partnership system
+  partnerships      AssetPartnership[]
+  revenueShares     RevenueShare[]
+  costAttributions  CostAttribution[]
+  invitations       PartnershipInvitation[]
 }
 
 model Company {
@@ -87,40 +114,135 @@ model Company {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   assets      AssetManagement[]
-  revenues    Revenue[] // Companies can have associated revenue
-  costs       Cost[] // Companies can have associated costs
 }
 
-// New model for Revenue entries
+// New: Asset Partnership model
+model AssetPartnership {
+  id              String    @id @default(cuid())
+  assetId         String
+  userId          String
+  sharePercentage Float     // Revenue share percentage (0-100)
+  isActive        Boolean   @default(true)
+  joinedAt        DateTime  @default(now())
+  leftAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  asset AssetManagement @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, userId])
+  @@index([assetId])
+  @@index([userId])
+}
+
+// New: Partnership invitation system
+model PartnershipInvitation {
+  id          String                    @id @default(cuid())
+  assetId     String
+  senderId    String
+  receiverId  String
+  sharePercentage Float                 // Proposed share percentage
+  status      InvitationStatus          @default(PENDING)
+  message     String?
+  expiresAt   DateTime?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  // Relations
+  asset    AssetManagement @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  sender   User            @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User            @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, receiverId])
+  @@index([receiverId])
+  @@index([senderId])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+// Enhanced Revenue model with sharing
 model Revenue {
-  id          String           @id @default(cuid())
-  source      String // e.g., "Sales", "Investment Income", "Service Fee"
-  amount      Float
-  date        DateTime         @default(now())
-  description String?
-  companyId   String? // Optional: Link revenue to a specific company
-  company     Company?         @relation(fields: [companyId], references: [id])
-  userId      String? // Optional: Link revenue to a specific user (if applicable)
-  user        User?            @relation(fields: [userId], references: [id])
-  assetId     String? // Optional: Link revenue to a specific asset
-  asset       AssetManagement? @relation(fields: [assetId], references: [id])
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                    String           @id @default(cuid())
+  source                String
+  amount                Float
+  date                  DateTime         @default(now())
+  description           String?
+  bankAssetManagementId String?
+  userId                String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  // Relations
+  bankAssetManagement AssetManagement? @relation("BankAssetRevenues", fields: [bankAssetManagementId], references: [id])
+  user                User?            @relation(fields: [userId], references: [id])
+  
+  // New: Revenue sharing
+  revenueShares       RevenueShare[]
 }
 
-// New model for Cost entries
+// New: Revenue sharing model
+model RevenueShare {
+  id          String  @id @default(cuid())
+  revenueId   String
+  assetId     String
+  userId      String
+  shareAmount Float   // Calculated amount based on percentage
+  percentage  Float   // Share percentage at time of revenue
+  createdAt   DateTime @default(now())
+
+  // Relations
+  revenue Revenue         @relation(fields: [revenueId], references: [id], onDelete: Cascade)
+  asset   AssetManagement @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([revenueId, userId])
+  @@index([assetId])
+  @@index([userId])
+}
+
+// Enhanced Cost model with attribution
 model Cost {
-  id          String           @id @default(cuid())
-  category    String // e.g., "Rent", "Salaries", "Utilities", "Supplies"
-  amount      Float
-  date        DateTime         @default(now())
-  description String?
-  companyId   String? // Optional: Link cost to a specific company
-  company     Company?         @relation(fields: [companyId], references: [id])
-  userId      String? // Optional: Link cost to a specific user (if applicable)
-  user        User?            @relation(fields: [userId], references: [id])
-  assetId     String? // Optional: Link cost to a specific asset
-  asset       AssetManagement? @relation(fields: [assetId], references: [id])
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                    String           @id @default(cuid())
+  category              String
+  amount                Float
+  date                  DateTime         @default(now())
+  description           String?
+  bankAssetManagementId String?
+  userId                String?          // User who incurred the cost
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  // Relations
+  bankAssetManagement AssetManagement? @relation("BankAssetCosts", fields: [bankAssetManagementId], references: [id])
+  user                User?            @relation(fields: [userId], references: [id])
+  
+  // New: Cost attribution
+  costAttributions    CostAttribution[]
+}
+
+// New: Cost attribution model
+model CostAttribution {
+  id           String  @id @default(cuid())
+  costId       String
+  assetId      String
+  userId       String  // User responsible for this cost
+  attributedAmount Float // Amount attributed to this user
+  percentage   Float   // Percentage of total cost
+  createdAt    DateTime @default(now())
+
+  // Relations
+  cost  Cost            @relation(fields: [costId], references: [id], onDelete: Cascade)
+  asset AssetManagement @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([costId, userId])
+  @@index([assetId])
+  @@index([userId])
 }

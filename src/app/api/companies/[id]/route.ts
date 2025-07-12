@@ -1,5 +1,6 @@
+// src/app/api/companies/[id]/route.ts
 import { NextResponse } from 'next/server';
-import {prisma} from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // GET a single company by ID
 export async function GET(
@@ -10,12 +11,21 @@ export async function GET(
     const { id } = params;
     const company = await prisma.company.findUnique({
       where: { id },
-      include: { assets: true }, // Optionally include related assets
+      include: {
+        assets: true, // Include related assets (this relation still exists on Company)
+      },
     });
 
     if (!company) {
       return NextResponse.json({ message: 'Company not found' }, { status: 404 });
     }
+
+    // Removed calculations for totalCompanyRevenue, totalCompanyCost, and companyNetIncome
+    // as Revenue and Cost are no longer directly related to Company in the schema.
+    // If you need these, you would calculate them by aggregating costs/revenues
+    // linked to assets that belong to this company, or re-introduce a direct relation
+    // in the schema if that's what's truly desired.
+
     return NextResponse.json(company, { status: 200 });
   } catch (error) {
     console.error('Error fetching company:', error);

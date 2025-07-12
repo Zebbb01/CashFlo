@@ -1,7 +1,8 @@
 // src/components/financial-management/RevenueCosting.tsx
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   useFinancialTotals,
@@ -9,160 +10,134 @@ import {
   useCosts,
   useDeleteRevenue,
   useDeleteCost,
-} from "@/hooks/financial-management/useRevenueCost"; // Import delete hooks
-import { DataTable } from "@/components/data-table"; // Import DataTable
+} from "@/hooks/financial-management/useRevenueCost";
+import { Revenue, Cost } from "@/types";
+import { useUsers } from "@/hooks/useUsers";
 
-// Import the new modal components
-import { AddRevenueModal } from "./modals/RevenueCosting/AddRevenueModal";
-import { AddCostModal } from "./modals/RevenueCosting/AddCostModal";
-import { EditRevenueModal } from "./modals/RevenueCosting/EditRevenueModal"; // NEW
-import { ViewRevenueModal } from "./modals/RevenueCosting/ViewRevenueModal"; // NEW
-import { EditCostModal } from "./modals/RevenueCosting/EditCostModal";     // NEW
-import { ViewCostModal } from "./modals/RevenueCosting/ViewCostModal";     // NEW
+// Import new modular components
+import { RevenueCostingSummary } from "./revenue-costing/revenue-costing-summary";
+import { RevenueSection } from "./revenue-costing/revenue-section";
+import { CostSection } from "./revenue-costing/cost-section";
+import { DeleteConfirmationDialog } from "./dialogs/delete-confirmation-dialog"; // New generic dialog
 
-import { Revenue, Cost } from "@/types"; // Import types
+// Import all modal components
+import { AddRevenueModal } from "./modals/RevenueCostingModals/AddRevenueModal";
+import { AddCostModal } from "./modals/RevenueCostingModals/AddCostModal";
+import { EditRevenueModal } from "./modals/RevenueCostingModals/EditRevenueModal";
+import { ViewRevenueModal } from "./modals/RevenueCostingModals/ViewRevenueModal";
+import { EditCostModal } from "./modals/RevenueCostingModals/EditCostModal";
+import { ViewCostModal } from "./modals/RevenueCostingModals/ViewCostModal";
 
 export function RevenueCosting() {
+  // Data fetching hooks
   const { totalAssets, totalRevenue, totalCosting, netProfit, isLoading, error } = useFinancialTotals();
   const { data: revenues, isLoading: isLoadingRevenues, error: revenuesError } = useRevenues();
   const { data: costs, isLoading: isLoadingCosts, error: costsError } = useCosts();
+  const { data: users, isLoading: areUsersLoading, error: usersError } = useUsers();
 
   // State for modals
   const [isAddRevenueModalOpen, setIsAddRevenueModalOpen] = useState(false);
   const [isAddCostModalOpen, setIsAddCostModalOpen] = useState(false);
-  const [isEditRevenueModalOpen, setIsEditRevenueModalOpen] = useState(false); // NEW
-  const [isViewRevenueModalOpen, setIsViewRevenueModalOpen] = useState(false); // NEW
-  const [isEditCostModalOpen, setIsEditCostModalOpen] = useState(false);     // NEW
-  const [isViewCostModalOpen, setIsViewCostModalOpen] = useState(false);     // NEW
+  const [isEditRevenueModalOpen, setIsEditRevenueModalOpen] = useState(false);
+  const [isViewRevenueModalOpen, setIsViewRevenueModalOpen] = useState(false);
+  const [isEditCostModalOpen, setIsEditCostModalOpen] = useState(false);
+  const [isViewCostModalOpen, setIsViewCostModalOpen] = useState(false);
 
-  const [selectedRevenue, setSelectedRevenue] = useState<Revenue | null>(null); // NEW
-  const [selectedCost, setSelectedCost] = useState<Cost | null>(null);       // NEW
+  const [selectedRevenue, setSelectedRevenue] = useState<Revenue | null>(null);
+  const [selectedCost, setSelectedCost] = useState<Cost | null>(null);
 
-  const deleteRevenueMutation = useDeleteRevenue(); // NEW
-  const deleteCostMutation = useDeleteCost();     // NEW
+  // State for delete confirmation dialogs
+  const [isDeleteRevenueDialogOpen, setIsDeleteRevenueDialogOpen] = useState(false);
+  const [revenueToDeleteId, setRevenueToDeleteId] = useState<string | null>(null);
+  const [isDeleteCostDialogOpen, setIsDeleteCostDialogOpen] = useState(false);
+  const [costToDeleteId, setCostToDeleteId] = useState<string | null>(null);
+
+  // Mutations
+  const deleteRevenueMutation = useDeleteRevenue();
+  const deleteCostMutation = useDeleteCost();
 
   useEffect(() => {
-    if (error || revenuesError || costsError) {
+    if (error || revenuesError || costsError || usersError) {
       toast.error("Error fetching financial data", {
-        description: error?.message || revenuesError?.message || costsError?.message,
+        description: error?.message || revenuesError?.message || costsError?.message || usersError?.message,
       });
     }
-  }, [error, revenuesError, costsError]);
+  }, [error, revenuesError, costsError, usersError]);
 
-  // Handlers for edit/view/delete actions
-  const handleEditRevenue = (revenue: Revenue) => { // NEW
+  // Handlers for Revenue actions
+  const handleEditRevenue = (revenue: Revenue) => {
     setSelectedRevenue(revenue);
     setIsEditRevenueModalOpen(true);
   };
 
-  const handleViewRevenue = (revenue: Revenue) => { // NEW
+  const handleViewRevenue = (revenue: Revenue) => {
     setSelectedRevenue(revenue);
     setIsViewRevenueModalOpen(true);
   };
 
-  const handleDeleteRevenue = async (revenueId: string) => { // NEW
-    if (!confirm("Are you sure you want to delete this revenue entry? This action cannot be undone.")) {
-      return;
-    }
+  const handleDeleteRevenueClick = (revenueId: string) => {
+    setRevenueToDeleteId(revenueId);
+    setIsDeleteRevenueDialogOpen(true);
+  };
+
+  const handleConfirmDeleteRevenue = async () => {
+    if (!revenueToDeleteId) return;
     try {
-      await deleteRevenueMutation.mutateAsync(revenueId);
+      await deleteRevenueMutation.mutateAsync(revenueToDeleteId);
       toast.success("Revenue Deleted", { description: "Revenue entry permanently deleted." });
+      setIsDeleteRevenueDialogOpen(false);
+      setRevenueToDeleteId(null);
     } catch (err: any) {
       toast.error("Failed to delete revenue", { description: err.message || "An unexpected error occurred." });
+      setIsDeleteRevenueDialogOpen(false);
+      setRevenueToDeleteId(null);
     }
   };
 
-  const handleEditCost = (cost: Cost) => { // NEW
+  // Handlers for Cost actions
+  const handleEditCost = (cost: Cost) => {
     setSelectedCost(cost);
     setIsEditCostModalOpen(true);
   };
 
-  const handleViewCost = (cost: Cost) => { // NEW
+  const handleViewCost = (cost: Cost) => {
     setSelectedCost(cost);
     setIsViewCostModalOpen(true);
   };
 
-  const handleDeleteCost = async (costId: string) => { // NEW
-    if (!confirm("Are you sure you want to delete this cost entry? This action cannot be undone.")) {
-      return;
-    }
+  const handleDeleteCostClick = (costId: string) => {
+    setCostToDeleteId(costId);
+    setIsDeleteCostDialogOpen(true);
+  };
+
+  const handleConfirmDeleteCost = async () => {
+    if (!costToDeleteId) return;
     try {
-      await deleteCostMutation.mutateAsync(costId);
+      await deleteCostMutation.mutateAsync(costToDeleteId);
       toast.success("Cost Deleted", { description: "Cost entry permanently deleted." });
+      setIsDeleteCostDialogOpen(false);
+      setCostToDeleteId(null);
     } catch (err: any) {
       toast.error("Failed to delete cost", { description: err.message || "An unexpected error occurred." });
+      setIsDeleteCostDialogOpen(false);
+      setCostToDeleteId(null);
     }
   };
 
-
-  // Define columns for Revenue DataTable
-  const revenueColumns = [
-    {
-      header: "Source",
-      cell: (row: Revenue) => row.source,
-    },
-    {
-      header: "Amount",
-      cell: (row: Revenue) => `₱${row.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    },
-    {
-      header: "Date",
-      cell: (row: Revenue) => new Date(row.date).toLocaleDateString(),
-    },
-    {
-      header: "Company",
-      cell: (row: Revenue) => row.company?.name || "N/A",
-    },
-    {
-      header: "Asset",
-      cell: (row: Revenue) => row.asset?.assetName || "N/A",
-    },
-    {
-      header: "Actions",
-      cell: (row: Revenue) => (
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => handleViewRevenue(row)}>View</Button>
-          <Button variant="outline" size="sm" onClick={() => handleEditRevenue(row)}>Edit</Button>
-          <Button variant="destructive" size="sm" onClick={() => handleDeleteRevenue(row.id)}>Delete</Button>
-        </div>
-      ),
-    },
-  ];
-
-  // Define columns for Cost DataTable
-  const costColumns = [
-    {
-      header: "Category",
-      cell: (row: Cost) => row.category,
-    },
-    {
-      header: "Amount",
-      cell: (row: Cost) => `-₱${row.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    },
-    {
-      header: "Date",
-      cell: (row: Cost) => new Date(row.date).toLocaleDateString(),
-    },
-    {
-      header: "Company",
-      cell: (row: Cost) => row.company?.name || "N/A",
-    },
-    {
-      header: "Asset",
-      cell: (row: Cost) => row.asset?.assetName || "N/A",
-    },
-    {
-      header: "Actions",
-      cell: (row: Cost) => (
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => handleViewCost(row)}>View</Button>
-          <Button variant="outline" size="sm" onClick={() => handleEditCost(row)}>Edit</Button>
-          <Button variant="destructive" size="sm" onClick={() => handleDeleteCost(row.id)}>Delete</Button>
-        </div>
-      ),
-    },
-  ];
-
+  // Render logic based on loading state
+  if (isLoading || areUsersLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue & Costing</CardTitle>
+          <CardDescription>Track your total revenue and associated costs.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Loading financial data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -171,64 +146,54 @@ export function RevenueCosting() {
         <CardDescription>Track your total revenue and associated costs.</CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <p>Loading financial data...</p>
-        ) : (
-          <>
-            <div className="space-y-2 mb-6">
-              <h3 className="text-lg font-semibold">
-                Total Assets: ₱{totalAssets.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
-              <h3 className="text-lg font-semibold">
-                Total Revenue: ₱{totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
-              <h3 className="text-lg font-semibold text-destructive">
-                Total Costing: -₱{totalCosting.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
-              <h3 className={`text-lg font-semibold ${netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                Net Profit: ₱{netProfit.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
-            </div>
+        {/* Financial Summary */}
+        <RevenueCostingSummary
+          totalAssets={totalAssets}
+          totalRevenue={totalRevenue}
+          totalCosting={totalCosting}
+          netProfit={netProfit}
+        />
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button onClick={() => setIsAddRevenueModalOpen(true)}>Add New Revenue</Button>
-              <Button onClick={() => setIsAddCostModalOpen(true)}>Add New Cost</Button>
-            </div>
+        {/* Revenue Section */}
+        <RevenueSection
+          revenues={revenues || []}
+          isLoadingRevenues={isLoadingRevenues}
+          onAddRevenue={() => setIsAddRevenueModalOpen(true)}
+          onEditRevenue={handleEditRevenue}
+          onViewRevenue={handleViewRevenue}
+          onDeleteRevenue={handleDeleteRevenueClick}
+        />
 
-            {/* Revenue Table */}
-            <h3 className="text-lg font-semibold mt-6 mb-2">Revenue Entries</h3>
-            <DataTable
-              columns={revenueColumns}
-              data={revenues || []}
-              isLoading={isLoadingRevenues}
-              noDataMessage="No revenue entries found. Add your first revenue above!"
-            />
-
-            {/* Cost Table */}
-            <h3 className="text-lg font-semibold mt-8 mb-2">Cost Entries</h3>
-            <DataTable
-              columns={costColumns}
-              data={costs || []}
-              isLoading={isLoadingCosts}
-              noDataMessage="No cost entries found. Add your first cost above!"
-            />
-          </>
-        )}
+        {/* Cost Section */}
+        <CostSection
+          costs={costs || []}
+          isLoadingCosts={isLoadingCosts}
+          onAddCost={() => setIsAddCostModalOpen(true)}
+          onEditCost={handleEditCost}
+          onViewCost={handleViewCost}
+          onDeleteCost={handleDeleteCostClick}
+        />
       </CardContent>
 
-      {/* Modals */}
+      {/* Modals are managed here as they affect the top-level state */}
       <AddRevenueModal
         isOpen={isAddRevenueModalOpen}
         onClose={() => setIsAddRevenueModalOpen(false)}
+        users={users || []}
+        isLoadingUsers={areUsersLoading}
       />
       <AddCostModal
         isOpen={isAddCostModalOpen}
         onClose={() => setIsAddCostModalOpen(false)}
+        users={users || []}
+        isLoadingUsers={areUsersLoading}
       />
       <EditRevenueModal
         isOpen={isEditRevenueModalOpen}
         onClose={() => setIsEditRevenueModalOpen(false)}
         revenue={selectedRevenue}
+        users={users || []}
+        isLoadingUsers={areUsersLoading}
       />
       <ViewRevenueModal
         isOpen={isViewRevenueModalOpen}
@@ -239,11 +204,29 @@ export function RevenueCosting() {
         isOpen={isEditCostModalOpen}
         onClose={() => setIsEditCostModalOpen(false)}
         cost={selectedCost}
+        users={users || []}
+        isLoadingUsers={areUsersLoading}
       />
       <ViewCostModal
         isOpen={isViewCostModalOpen}
         onClose={() => setIsViewCostModalOpen(false)}
         cost={selectedCost}
+      />
+
+      {/* Delete Confirmation Dialogs (reusable component) */}
+      <DeleteConfirmationDialog
+        isOpen={isDeleteRevenueDialogOpen}
+        onConfirm={handleConfirmDeleteRevenue}
+        onCancel={() => setIsDeleteRevenueDialogOpen(false)}
+        title="Delete Revenue Entry?"
+        description="This action cannot be undone. This will permanently delete this revenue entry."
+      />
+      <DeleteConfirmationDialog
+        isOpen={isDeleteCostDialogOpen}
+        onConfirm={handleConfirmDeleteCost}
+        onCancel={() => setIsDeleteCostDialogOpen(false)}
+        title="Delete Cost Entry?"
+        description="This action cannot be undone. This will permanently delete this cost entry."
       />
     </Card>
   );

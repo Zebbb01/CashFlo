@@ -3,12 +3,14 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { Toaster } from "@/components/ui/sonner"
-import { Providers } from "./provider"
+import { Providers } from "./(auth)/provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "CashFlo - Personal Finance Management",
+  title: { 
+    default: "CashFlo - Personal Finance Management", 
+    template: "%s | CashFlo" },
   description: "Take control of your finances with CashFlo's intuitive cash flow management platform",
 }
 

@@ -1,65 +1,91 @@
-// src/components/financial-management/AssetManagement.tsx
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import { useSession } from "next-auth/react"; // NEW: Import useSession
+
+// Hooks
 import {
   useAssets,
   useDeleteAsset,
   useUpdateAsset,
 } from "@/hooks/financial-management/useAssets";
 import { useCompanies } from "@/hooks/financial-management/useCompanies";
+import { useBanks } from "@/hooks/financial-management/useBanks";
+import { useUserInvitations } from "@/hooks/financial-management/useInvitations";
+import { useUsers } from "@/hooks/useUsers";
+
+// Types
 import { Asset } from "@/types";
 
-// Import the new modal components and DataTable
-import { AddCompanyModal } from "./modals/AssetManagement/AddCompanyModal";
-import { AddAssetModal } from "./modals/AssetManagement/AddAssetModal";
-import { EditAssetModal } from "./modals/AssetManagement/EditAssetModal";
-import { ViewAssetModal } from "./modals/AssetManagement/ViewAssetModal";
-import { DataTable } from "@/components/data-table"; // Adjust path if needed
-
-// Import AlertDialog components
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+// Nested Components
+import { AssetTableSection } from "./asset-management/asset-table-section";
+import { BankTableSection } from "./asset-management/bank-table-section";
+import { AssetModals } from "./asset-management/assets-modals-summary";
+import { ColleagueManagementModal } from "./modals/ColleagueManagementModals/ColleagueManagementModal";
+import { InvitationsModal } from "./modals/InvitationModals/InvitationsModal";
+import { DeleteAssetAlertDialog } from "./dialogs/delete-asset-alert-dialog";
 
 export function AssetManagement() {
+  const { data: session, status } = useSession();
+  const currentUserId = session?.user?.id || '';
+
+  useEffect(() => {
+    if (currentUserId) {
+      console.log("Current User ID (Receiver):", currentUserId);
+    }
+  }, [currentUserId]);
+
+  // State for general modals
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
   const [isEditAssetModalOpen, setIsEditAssetModalOpen] = useState(false);
   const [isViewAssetModalOpen, setIsViewAssetModalOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null); // For edit/view modals
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
-  // State for the delete confirmation dialog
+  // State for delete confirmation
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [assetToDeleteId, setAssetToDeleteId] = useState<string | null>(null);
 
-  const { data: assets, isLoading: isLoadingAssets, error: assetsError } = useAssets();
-  const { error: companiesError } = useCompanies();
+  // State for Colleague/Partnership Management
+  const [isManageColleaguesModalOpen, setIsManageColleaguesModalOpen] = useState(false);
+  const [selectedAssetForColleagues, setSelectedAssetForColleagues] = useState<Asset | null>(null);
 
+  // State for Invitation Management
+  const [isViewInvitationsModalOpen, setIsViewInvitationsModalOpen] = useState(false);
+
+  // Data Hooks
+  const { data: assets, isLoading: isLoadingAssets, error: assetsError } = useAssets();
+  const { data: companies, isLoading: isLoadingCompanies, error: companiesError } = useCompanies();
+  const { data: banks, isLoading: isLoadingBanks, error: banksError } = useBanks();
+  const { data: users, isLoading: isLoadingUsers, error: usersError } = useUsers();
+  const { data: userInvitations, isLoading: isLoadingUserInvitations } = useUserInvitations(currentUserId, 'received');
+
+  // Mutation Hooks
   const updateAssetMutation = useUpdateAsset();
   const deleteAssetMutation = useDeleteAsset();
 
+  // Error Handling
   useEffect(() => {
     if (assetsError) {
-      toast.error("Error fetching assets", {
-        description: assetsError.message,
-      });
+      toast.error("Error fetching assets", { description: assetsError.message });
     }
     if (companiesError) {
-      toast.error("Error fetching companies", {
-        description: companiesError.message,
-      });
+      toast.error("Error fetching companies", { description: companiesError.message });
     }
-  }, [assetsError, companiesError]);
+    if (banksError) {
+      toast.error("Error fetching banks", { description: banksError.message });
+    }
+    if (usersError) {
+      toast.error("Error fetching users", { description: usersError.message });
+    }
+  }, [assetsError, companiesError, banksError, usersError]);
 
+  // Handlers for Asset Actions
   const handleToggleSoftDelete = async (asset: Asset) => {
     try {
       await updateAssetMutation.mutateAsync({
@@ -67,9 +93,7 @@ export function AssetManagement() {
         payload: { softDelete: asset.deletedAt === null ? true : false },
       });
       toast.info("Asset Status Updated", {
-        description: `Asset "${asset.assetName}" ${
-          asset.deletedAt === null ? "soft-deleted" : "restored"
-        }.`,
+        description: `Asset "${asset.assetName}" ${asset.deletedAt === null ? "soft-deleted" : "restored"}.`,
       });
     } catch (error: any) {
       toast.error("Failed to update asset status", {
@@ -78,29 +102,22 @@ export function AssetManagement() {
     }
   };
 
-  // Function to initiate the delete process by opening the dialog
   const handleDeleteClick = (assetId: string) => {
     setAssetToDeleteId(assetId);
     setIsDeleteDialogOpen(true);
   };
 
-  // Function to handle the actual hard delete after confirmation
   const handleConfirmDelete = async () => {
     if (!assetToDeleteId) return;
-
     try {
       await deleteAssetMutation.mutateAsync(assetToDeleteId);
-      toast.success("Asset Deleted", {
-        description: "The asset has been permanently deleted.",
-      });
-      setIsDeleteDialogOpen(false); // Close the dialog on success
-      setAssetToDeleteId(null); // Clear the ID
+      toast.success("Asset Deleted", { description: "The asset has been permanently deleted." });
+      setIsDeleteDialogOpen(false);
+      setAssetToDeleteId(null);
     } catch (error: any) {
-      toast.error("Failed to delete asset", {
-        description: error.message || "An unexpected error occurred.",
-      });
-      setIsDeleteDialogOpen(false); // Close the dialog even on error
-      setAssetToDeleteId(null); // Clear the ID
+      toast.error("Failed to delete asset", { description: error.message || "An unexpected error occurred." });
+      setIsDeleteDialogOpen(false);
+      setAssetToDeleteId(null);
     }
   };
 
@@ -114,137 +131,106 @@ export function AssetManagement() {
     setIsViewAssetModalOpen(true);
   };
 
-  // Define columns for the DataTable
-  const assetColumns = [
-    {
-      header: "Asset Name",
-      accessorKey: "assetName",
-      // Corrected cell function: it receives the `Asset` object directly
-      cell: (asset: Asset) => asset.assetName,
-    },
-    {
-      header: "Type",
-      accessorKey: "assetType",
-      // Corrected cell function
-      cell: (asset: Asset) => asset.assetType,
-    },
-    {
-      header: "Company",
-      accessorKey: "company.name",
-      // Corrected cell function
-      cell: (asset: Asset) => asset.company?.name || "N/A",
-    },
-    {
-      header: "Value",
-      accessorKey: "assetValue",
-      // Corrected cell function
-      cell: (asset: Asset) => (
-        <span>₱{asset.assetValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-      ),
-    },
-    {
-      header: "Status",
-      accessorKey: "status",
-      // Corrected cell function
-      cell: (asset: Asset) => (
-        asset.deletedAt ? (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Soft-Deleted</span>
-        ) : (
-          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-        )
-      ),
-    },
-    {
-      header: "Actions",
-      // Corrected cell function: it receives the `Asset` object directly
-      cell: (asset: Asset) => (
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => handleViewAsset(asset)}>
-            View
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleEditAsset(asset)}>
-            Edit
-          </Button>
-          {/* <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleToggleSoftDelete(asset)}
-            disabled={updateAssetMutation.isPending}
-          >
-            {asset.deletedAt ? "Restore" : "Soft Delete"}
-          </Button> */}
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => handleDeleteClick(asset.id)} // Use the new handler here
-            disabled={deleteAssetMutation.isPending}
-          >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const handleManageColleagues = (asset: Asset) => {
+    setSelectedAssetForColleagues(asset);
+    setIsManageColleaguesModalOpen(true);
+  };
+
+  const handleViewInvitations = () => {
+    setIsViewInvitationsModalOpen(true);
+  };
+
+  // If session is still loading, you might want to show a loading state for the whole component
+  if (status === "loading") {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Asset Management</CardTitle>
+          <CardDescription>Loading user session...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Please wait while we load your session data.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Asset Management</CardTitle>
-        <CardDescription>Add and track your assets and associated companies.</CardDescription>
+        <CardDescription>Add and track your assets, associated companies, and banks.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <Button onClick={() => setIsCompanyModalOpen(true)}>Add New Company</Button>
-          <Button onClick={() => setIsAssetModalOpen(true)}>Add New Asset</Button>
+          <Button variant='outline' onClick={() => setIsCompanyModalOpen(true)}>Add New Company</Button>
+          <Button variant='outline' onClick={() => setIsAssetModalOpen(true)}>Add New Asset</Button>
+          <Button variant='outline' onClick={() => setIsBankModalOpen(true)}>Add New Bank</Button>
+          <Button variant='outline' onClick={handleViewInvitations} disabled={isLoadingUserInvitations || !currentUserId}>
+            View My Invitations ({userInvitations?.length || 0})
+          </Button>
         </div>
 
-        <h3 className="text-lg font-semibold mt-6 mb-2">Current Assets</h3>
-        <DataTable
-          columns={assetColumns}
-          data={assets || []}
-          isLoading={isLoadingAssets}
-          noDataMessage="No assets found. Add your first asset above!"
+        <AssetTableSection
+          assets={assets || []}
+          isLoadingAssets={isLoadingAssets}
+          isLoadingCompanies={isLoadingCompanies}
+          isLoadingBanks={isLoadingBanks}
+          isLoadingUsers={isLoadingUsers}
+          handleEditAsset={handleEditAsset}
+          handleViewAsset={handleViewAsset}
+          handleManageColleagues={handleManageColleagues}
+          handleToggleSoftDelete={handleToggleSoftDelete}
+          handleDeleteClick={handleDeleteClick}
+          updateAssetMutationIsPending={updateAssetMutation.isPending}
+        />
+
+        <Separator className="mt-8" />
+
+        <BankTableSection
+          banks={banks || []}
+          isLoadingBanks={isLoadingBanks}
         />
       </CardContent>
 
       {/* Modals */}
-      <AddCompanyModal
-        isOpen={isCompanyModalOpen}
-        onClose={() => setIsCompanyModalOpen(false)}
-      />
-      <AddAssetModal
-        isOpen={isAssetModalOpen}
-        onClose={() => setIsAssetModalOpen(false)}
-      />
-      <EditAssetModal
-        isOpen={isEditAssetModalOpen}
-        onClose={() => setIsEditAssetModalOpen(false)}
-        asset={selectedAsset}
-      />
-      <ViewAssetModal
-        isOpen={isViewAssetModalOpen}
-        onClose={() => setIsViewAssetModalOpen(false)}
-        asset={selectedAsset}
+      <AssetModals
+        isCompanyModalOpen={isCompanyModalOpen}
+        setIsCompanyModalOpen={setIsCompanyModalOpen}
+        isAssetModalOpen={isAssetModalOpen}
+        setIsAssetModalOpen={setIsAssetModalOpen}
+        isEditAssetModalOpen={isEditAssetModalOpen}
+        setIsEditAssetModalOpen={setIsEditAssetModalOpen}
+        isViewAssetModalOpen={isViewAssetModalOpen}
+        setIsViewAssetModalOpen={setIsViewAssetModalOpen}
+        isBankModalOpen={isBankModalOpen}
+        setIsBankModalOpen={setIsBankModalOpen}
+        selectedAsset={selectedAsset}
+        companies={companies || []}
+        banks={banks || []}
+        users={users || []}
+        isLoadingUsers={isLoadingUsers}
       />
 
-      {/* Delete Confirmation AlertDialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your asset and remove its
-              data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ColleagueManagementModal
+        isOpen={isManageColleaguesModalOpen}
+        onClose={() => setIsManageColleaguesModalOpen(false)}
+        selectedAsset={selectedAssetForColleagues}
+        users={users || []}
+        currentUserId={currentUserId}
+      />
+
+      <InvitationsModal
+        isOpen={isViewInvitationsModalOpen}
+        onClose={() => setIsViewInvitationsModalOpen(false)}
+        currentUserId={currentUserId}
+      />
+
+      <DeleteAssetAlertDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </Card>
   );
 }

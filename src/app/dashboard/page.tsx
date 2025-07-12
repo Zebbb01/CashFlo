@@ -1,112 +1,197 @@
 // src/app/dashboard/page.tsx
-"use client"
+"use client";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, DollarSign, Users, Activity } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
-import { signOut } from "next-auth/react"
-import {
-    Landmark, // For Total Assets card
-    PieChart, // For Monthly Revenue card
-    Wallet,   // For Net Income card
-    Users     // For Active Projects card
-} from "lucide-react" // Import icons if used in this specific page
+// Sample data for demonstration
+const sampleData = [
+  { id: 1, name: "John Doe", amount: 1200, status: "Completed", date: "2024-01-15" },
+  { id: 2, name: "Jane Smith", amount: 850, status: "Pending", date: "2024-01-14" },
+  { id: 3, name: "Bob Johnson", amount: 2100, status: "Completed", date: "2024-01-13" },
+];
 
-export default function DashboardOverviewPage() {
-  const totalAssets = "$1,500,000.00";
-  const monthlyRevenue = "$75,000.00";
-  const netIncome = "$30,000.00";
-  const activeProjects = "5";
+const columns = [
+  {
+    header: "Name",
+    cell: (row: any) => <span className="font-medium">{row.name}</span>
+  },
+  {
+    header: "Amount",
+    cell: (row: any) => (
+      <span className="text-gradient-primary font-semibold">
+        ${row.amount.toLocaleString()}
+      </span>
+    )
+  },
+  {
+    header: "Status",
+    cell: (row: any) => (
+      <Badge variant={row.status === "Completed" ? "default" : "secondary"}>
+        {row.status}
+      </Badge>
+    )
+  },
+  {
+    header: "Date",
+    cell: (row: any) => <span className="text-muted-foreground">{row.date}</span>
+  }
+];
 
+export default function DashboardPage() {
   return (
-    <div className="flex-1 overflow-auto p-4">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-600">A quick glance at your key financial metrics and activities.</p>
-
-        <Separator />
-
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-              <Landmark className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalAssets}</div>
-              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <PieChart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{monthlyRevenue}</div>
-              <p className="text-xs text-muted-foreground">+18.0% from last month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Net Income</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{netIncome}</div>
-              <p className="text-xs text-muted-foreground">Increased by 10%</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeProjects}</div>
-              <p className="text-xs text-muted-foreground">Currently being managed</p>
-            </CardContent>
-          </Card>
+    <PageWrapper
+      title="Dashboard Overview"
+      description="Welcome to your financial command center"
+      actions={
+        <div className="flex gap-2">
+          <Button variant="outline" className="scale-hover">
+            Export Data
+          </Button>
+          <Button variant="gradient">
+            <TrendingUp className="w-4 h-4" />
+            View Analytics
+          </Button>
         </div>
+      }
+    >
+      {/* Stats Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <Card glass hover className="fade-in">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Revenue
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground floating" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gradient-primary">$45,231.89</div>
+            <p className="text-xs text-muted-foreground">
+              +20.1% from last month
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Recent Activity / Quick Links */}
-        <h2 className="text-2xl font-bold text-gray-900 mt-8">Recent Activity & Quick Links</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
+        <Card glass hover className="fade-in fade-in-delay-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active Users
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground floating" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gradient-secondary">+2,350</div>
+            <p className="text-xs text-muted-foreground">
+              +180.1% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card glass hover className="fade-in fade-in-delay-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Sales
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground floating" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gradient-primary">+12,234</div>
+            <p className="text-xs text-muted-foreground">
+              +19% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card glass hover className="fade-in fade-in-delay-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active Now
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground floating" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gradient-accent">+573</div>
+            <p className="text-xs text-muted-foreground">
+              +201 since last hour
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Transactions */}
+      <div className="space-y-6">
+        <Card glass hover className="fade-in fade-in-delay-1">
+          <CardHeader>
+            <CardTitle gradient>Recent Transactions</CardTitle>
+            <CardDescription>
+              Your latest financial activities and updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable 
+              columns={columns} 
+              data={sampleData}
+              noDataMessage="No transactions found"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Additional content section */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card glass hover className="fade-in fade-in-delay-2">
             <CardHeader>
-              <CardTitle>Latest Transactions</CardTitle>
-              <CardDescription>Recently recorded income and expenses.</CardDescription>
+              <CardTitle gradient>Quick Actions</CardTitle>
+              <CardDescription>
+                Frequently used features and shortcuts
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-700">
-                <li><span className="font-semibold">June 5:</span> Received payment from Client A - <span className="text-green-600">+$2,500</span></li>
-                <li><span className="font-semibold">June 4:</span> Paid utilities - <span className="text-red-600">-$350</span></li>
-                <li><span className="font-semibold">June 3:</span> ATM withdrawal - <span className="text-red-600">-$200</span></li>
-              </ul>
-              <Button variant="link" className="px-0 mt-4">View All Transactions</Button>
+            <CardContent className="space-y-4">
+              <Button variant="gradient" className="w-full">
+                <DollarSign className="w-4 h-4" />
+                Create New Transaction
+              </Button>
+              <Button variant="gradientSecondary" className="w-full">
+                <Users className="w-4 h-4" />
+                Manage Team
+              </Button>
+              <Button variant="outline" className="w-full scale-hover">
+                <Activity className="w-4 h-4" />
+                View Reports
+              </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card glass hover className="fade-in fade-in-delay-3">
             <CardHeader>
-              <CardTitle>Key Tasks</CardTitle>
-              <CardDescription>Important actions to take.</CardDescription>
+              <CardTitle gradient>System Status</CardTitle>
+              <CardDescription>
+                Current system health and performance
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-700">
-                <li>Review Q2 Financial Report</li>
-                <li>Add new asset: Investment Property</li>
-                <li>Categorize May expenses</li>
-              </ul>
-              <Button variant="link" className="px-0 mt-4">Go to Financial Management</Button>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Database</span>
+                <Badge variant="default" className="bg-green-500">Online</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">API Services</span>
+                <Badge variant="default" className="bg-green-500">Healthy</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Background Jobs</span>
+                <Badge variant="secondary">Processing</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Cache</span>
+                <Badge variant="default" className="bg-green-500">Optimized</Badge>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

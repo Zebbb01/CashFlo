@@ -81,6 +81,8 @@ export const useCreateCompany = () => {
     mutationFn: createCompany,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['revenues'] }); // Invalidate revenues/costs linked to companies
+      queryClient.invalidateQueries({ queryKey: ['costs'] });
     },
   });
 };
@@ -92,6 +94,8 @@ export const useUpdateCompany = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['revenues'] }); // Invalidate revenues/costs linked to companies
+      queryClient.invalidateQueries({ queryKey: ['costs'] });
     },
   });
 };
@@ -102,6 +106,8 @@ export const useDeleteCompany = () => {
     mutationFn: deleteCompany,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['revenues'] }); // Invalidate revenues/costs linked to companies
+      queryClient.invalidateQueries({ queryKey: ['costs'] });
     },
   });
 };

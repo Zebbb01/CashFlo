@@ -15,44 +15,72 @@ import {
 
 export function DashboardBreadcrumbs() {
   const pathname = usePathname();
-  const pathSegments = pathname.split('/').filter(segment => segment); // Split by '/' and remove empty strings
+  const pathSegments = pathname.split('/').filter(segment => segment);
+  const [isVisible, setIsVisible] = React.useState(false);
 
-  // Map of path segments to display names (customize as needed)
+  React.useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  // Map of path segments to display names
   const pathDisplayNames: { [key: string]: string } = {
     "dashboard": "Dashboard",
-    "data-visualization": "Data Visualization",
+    "general": "General",
     "financial-management": "Financial Management",
-    "team": "Team Overview", // For /dashboard/data-visualization/team
-    "assets": "Assets & Liabilities", // For /dashboard/financial-management/assets
-    "colleagues": "Colleague Contributions", // For /dashboard/financial-management/colleagues
-    "overview": "Overview" // For /dashboard if you decided to have /dashboard/overview
+    "financial-assets": "Assets & Liabilities",
+    "financial-withdrawals": "Withdrawal History & Costs",
+    "financial-colleagues": "Colleague Contributions",
+    "team": "Team Overview",
+    "overview": "Overview"
   };
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        {pathSegments.map((segment, index) => {
-          const href = '/' + pathSegments.slice(0, index + 1).join('/');
-          const displayName = pathDisplayNames[segment] || segment.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()); // Convert slug to title case
+    <div className={`transition-all duration-500 ease-in-out ${
+      isVisible ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'
+    }`}>
+      <Breadcrumb>
+        <BreadcrumbList>
+          {pathSegments.map((segment, index) => {
+            const href = '/' + pathSegments.slice(0, index + 1).join('/');
+            const displayName = pathDisplayNames[segment] || 
+              segment.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 
-          const isLast = index === pathSegments.length - 1;
+            const isLast = index === pathSegments.length - 1;
 
-          return (
-            <React.Fragment key={href}>
-              <BreadcrumbItem>
-                {isLast ? (
-                  <BreadcrumbPage>{displayName}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link href={href}>{displayName}</Link>
-                  </BreadcrumbLink>
+            return (
+              <React.Fragment key={href}>
+                <BreadcrumbItem 
+                  className={`transition-all duration-300 delay-${index * 100} ${
+                    isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                  }`}
+                >
+                  {isLast ? (
+                    <BreadcrumbPage className="text-gradient-primary font-medium">
+                      {displayName}
+                    </BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link 
+                        href={href}
+                        className="hover:text-primary transition-colors duration-200 scale-hover"
+                      >
+                        {displayName}
+                      </Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {!isLast && (
+                  <BreadcrumbSeparator 
+                    className={`transition-all duration-300 delay-${index * 100 + 50} ${
+                      isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                    }`}
+                  />
                 )}
-              </BreadcrumbItem>
-              {!isLast && <BreadcrumbSeparator />}
-            </React.Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
+              </React.Fragment>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
   );
 }

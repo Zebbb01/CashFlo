@@ -1,4 +1,4 @@
-// src/components/ui/data-table.tsx
+// src/components/data-table.tsx
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Assuming shadcn Table components
 

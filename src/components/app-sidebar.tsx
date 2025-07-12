@@ -1,3 +1,4 @@
+// src/components/app-sidebar.tsx
 "use client";
 
 import * as React from "react";
@@ -23,8 +24,14 @@ import {
 import { useSession } from "next-auth/react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // ✅ Move the hook inside the component body
   const { data: session, status } = useSession();
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    // Add a small delay to trigger fade-in animations
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const data = {
     user: {
@@ -54,22 +61,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: [
       {
         title: "Data Visualization",
-        url: "/dashboard/data-visualization",
         icon: PieChart,
         items: [
           {
             title: "General",
-            url: "/dashboard/data-visualization",
+            url: "/dashboard/general",
           },
           {
             title: "Team Overview",
-            url: "/dashboard/data-visualization/team",
+            url: "#",
           },
         ],
       },
       {
         title: "Budget & Finances",
-        url: "/dashboard/financial-management",
         icon: Calculator,
         items: [
           {
@@ -78,15 +83,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Assets & Liabilities",
-            url: "/dashboard/financial-management/financial-assets",
+            url: "/dashboard/financial-assets",
           },
           {
             title: "Withdrawal History & Costs",
-            url: "/dashboard/financial-management/financial-withdrawals",
+            url: "/dashboard/financial-withdrawals",
           },
           {
             title: "Colleague Contributions",
-            url: "/dashboard/financial-management/financial-colleagues",
+            url: "/dashboard/financial-colleagues",
           },
         ],
       },
@@ -101,16 +106,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+    <Sidebar 
+      collapsible="icon" 
+      className={`glass-card transition-all duration-500 ease-in-out ${
+        isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+      }`}
+      {...props}
+    >
+      <SidebarHeader className="fade-in">
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navOverView} groupLabel="Overview" />
-        <NavMain items={data.navMain} groupLabel="Core Features" />
-        <NavMain items={data.navOther} groupLabel="General" />
+      <SidebarContent className="space-y-2">
+        <div className="fade-in fade-in-delay-1">
+          <NavMain items={data.navOverView} groupLabel="Overview" />
+        </div>
+        <div className="fade-in fade-in-delay-2">
+          <NavMain items={data.navMain} groupLabel="Core Features" />
+        </div>
+        <div className="fade-in fade-in-delay-3">
+          <NavMain items={data.navOther} groupLabel="General" />
+        </div>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="fade-in fade-in-delay-3">
         <NavUser user={data.user} />
       </SidebarFooter>
       <SidebarRail />
