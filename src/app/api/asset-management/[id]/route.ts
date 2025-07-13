@@ -3,7 +3,7 @@ import { withMiddleware } from '@/lib/api-middleware';
 import { AssetService } from '@/lib/services'; 
 import { updateAssetSchema } from '@/lib/validations/asset.validation';
 import { NextResponse } from 'next/server';
-import { AssetManagement, AssetPartnership, User, Company, Bank } from '@prisma/client'; 
+import { AssetManagement, AssetPartnership} from '@prisma/client'; 
 
 // Define a local type that includes the necessary relations for this route
 type AssetWithPartnerships = AssetManagement & {

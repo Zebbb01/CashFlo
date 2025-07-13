@@ -1,6 +1,6 @@
 // src/lib/services/asset.service.ts
 import { prisma } from '@/lib/prisma';
-import { AssetManagement, AssetPartnership, User, Company, Bank } from '@prisma/client'; // Import Prisma generated types
+import { AssetManagement, AssetPartnership, Company, Bank } from '@prisma/client'; // Import Prisma generated types
 
 // Define a type for AssetManagement with included relations
 type AssetWithRelations = AssetManagement & {
@@ -51,6 +51,16 @@ export class AssetService {
         company: { select: { id: true, name: true, description: true } },
         bank: { select: { id: true, name: true } },
         owner: { select: { id: true, name: true, email: true } },
+        partnerships: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            userId: true,
+            sharePercentage: true,
+            user: { select: { id: true, name: true, email: true, image: true } }
+          },
+          orderBy: { sharePercentage: 'desc' }
+        }
       },
       orderBy: { createdAt: 'desc' },
     });

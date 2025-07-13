@@ -12,7 +12,7 @@ import {
   useDeleteCost,
 } from "@/hooks/financial-management/useRevenueCost";
 import { Revenue, Cost } from "@/types";
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers } from "@/hooks/auth/useUsers";
 
 // Import new modular components
 import { RevenueCostingSummary } from "./revenue-costing/revenue-costing-summary";

@@ -16,7 +16,7 @@ import {
 import { useCompanies } from "@/hooks/financial-management/useCompanies";
 import { useBanks } from "@/hooks/financial-management/useBanks";
 import { useUserInvitations } from "@/hooks/financial-management/useInvitations";
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers } from "@/hooks/auth/useUsers";
 
 // Types
 import { Asset } from "@/types";
@@ -183,6 +183,7 @@ export function AssetManagement() {
           handleToggleSoftDelete={handleToggleSoftDelete}
           handleDeleteClick={handleDeleteClick}
           updateAssetMutationIsPending={updateAssetMutation.isPending}
+          currentUserId={currentUserId}
         />
 
         <Separator className="mt-8" />

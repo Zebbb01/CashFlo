@@ -1,3 +1,4 @@
+// src/components/financial-management/asset-management/asset-table-section.tsx
 'use client';
 
 import React from "react";
@@ -19,6 +20,7 @@ interface AssetTableSectionProps {
   handleToggleSoftDelete: (asset: Asset) => Promise<void>;
   handleDeleteClick: (assetId: string) => void;
   updateAssetMutationIsPending: boolean;
+  currentUserId: string; // Current user's ID
 }
 
 export function AssetTableSection({
@@ -33,7 +35,26 @@ export function AssetTableSection({
   handleToggleSoftDelete,
   handleDeleteClick,
   updateAssetMutationIsPending,
+  currentUserId,
 }: AssetTableSectionProps) {
+
+  // Function to determine if the current user can view an asset
+  const canViewAsset = (asset: Asset) => {
+    // 1. Check if the current user is the primary owner
+    const isOwner = asset.userId === currentUserId;
+
+    // 2. Check if the current user is part of any AssetPartnership for this asset
+    // This assumes that when assets are fetched, their 'partnerships' array is populated
+    // with AssetPartnership objects that contain the 'userId' of the partner.
+    const isPartner = asset.partnerships?.some(assetPartnership => assetPartnership.userId === currentUserId);
+
+    // An asset can be viewed if the current user is either the owner or a partner
+    return isOwner || isPartner;
+  };
+
+  // Filter assets to show only those the current user owns or is a partner in
+  const assetsToDisplay = assets.filter(canViewAsset);
+
   const assetColumns = [
     {
       header: "Asset Name",
@@ -90,14 +111,16 @@ export function AssetTableSection({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => handleViewAsset(asset)}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleEditAsset(asset)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleManageColleagues(asset)}>Manage Colleagues</DropdownMenuItem>
-            {/* <DropdownMenuItem onClick={() => handleToggleSoftDelete(asset)} disabled={updateAssetMutationIsPending}>
-              {asset.deletedAt ? "Restore" : "Soft Delete"}
-            </DropdownMenuItem> */}
-            <DropdownMenuItem onClick={() => handleDeleteClick(asset.id)} className="text-red-600 focus:text-red-600">
-              Delete
-            </DropdownMenuItem>
+            {/* Actions (Edit, Manage Colleagues, Delete) are only visible to the primary owner */}
+            {asset.userId === currentUserId && (
+              <>
+                <DropdownMenuItem onClick={() => handleEditAsset(asset)}>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleManageColleagues(asset)}>Manage Colleagues</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDeleteClick(asset.id)} className="text-red-600 focus:text-red-600">
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -109,9 +132,9 @@ export function AssetTableSection({
       <h3 className="text-lg font-semibold mt-6 mb-2">Current Assets</h3>
       <DataTable
         columns={assetColumns}
-        data={assets || []}
+        data={assetsToDisplay} // Pass the filtered assets here
         isLoading={isLoadingAssets || isLoadingBanks || isLoadingCompanies || isLoadingUsers}
-        noDataMessage="No assets found. Add your first asset above!"
+        noDataMessage="No assets found or you don't own/collaborate on any assets."
       />
     </>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
-import { signUpUser } from "@/services/auth.service" // Import the new service
+import { signUpUser } from "@/lib/services/auth.service" // Import the new service
 
 export const useSignUp = () => {
   const router = useRouter();

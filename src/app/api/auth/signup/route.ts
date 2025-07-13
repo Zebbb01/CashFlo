@@ -1,59 +1,46 @@
-import { NextRequest, NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import { z } from "zod"
-import { prisma } from "@/lib/prisma"
-
-const signupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters")
-})
+// src/app/api/auth/signup/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { UserService } from "@/lib/services/user.service"; // Import the UserService
+import { signupSchema } from "@/lib/validations/user.validation"; // Import the signupSchema
+import { ZodError } from "zod"; // Import ZodError explicitly
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { name, email, password } = signupSchema.parse(body)
+    const body = await request.json();
+    // Validate the request body using the Zod schema
+    const validatedData = signupSchema.parse(body);
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
+    const { name, email, password } = validatedData;
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 400 }
-      )
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword
-      }
-    })
+    // Delegate the user creation logic to the UserService
+    const newUser = await UserService.createUser(name, email, password);
 
     return NextResponse.json(
-      { message: "User created successfully", userId: user.id },
+      { message: "User created successfully", userId: newUser.id },
       { status: 201 }
-    )
+    );
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    // Handle Zod validation errors
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { error: error.errors[0].message },
         { status: 400 }
-      )
+      );
+    }
+    // Handle specific errors thrown by the UserService
+    if (error instanceof Error) {
+      if (error.message.includes("User with this email already exists")) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 400 }
+        );
+      }
     }
 
-    console.error("Signup error:", error)
+    console.error("Signup error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
 }
