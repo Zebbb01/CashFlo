@@ -229,7 +229,7 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
                   </SelectContent>
                 </Select>
               ) : (
-                <p className="text-muted-foreground text-sm">No assets available.</p>
+                <p className="text-muted-foreground text-sm">No assets found. Please create an Asset first in the Asset Management section.</p>
               )}
             </div>
           </div>

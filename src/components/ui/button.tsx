@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-5 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-primary/50 focus-visible:ring-[4px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[0.98]",
   {
     variants: {
       variant: {
@@ -18,7 +18,7 @@ const buttonVariants = cva(
         outline:
           "border shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         outlineDestructive:
-           "border shadow-xs text-primary-foreground bg-destructive hover:bg-destructive/80 hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border shadow-xs text-primary-foreground bg-destructive hover:bg-destructive/80 hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         auth:
           "border-primary/30 bg-primary hover:bg-primary/80 text-primary-foreground text-lg font-semibold backdrop-blur-sm transition-all duration-300",
         hero:
@@ -36,10 +36,10 @@ const buttonVariants = cva(
         gradientSecondary: "btn-gradient-secondary",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
+        default: "h-11 px-6 py-2 has-[>svg]:px-4",
+        sm: "h-9 rounded-full gap-1.5 px-4 has-[>svg]:px-3",
+        lg: "h-12 rounded-full px-8 text-base has-[>svg]:px-5",
+        icon: "size-11",
       },
     },
     defaultVariants: {

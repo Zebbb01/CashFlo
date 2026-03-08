@@ -3,8 +3,12 @@
 :root {
   --radius: 0.75rem;
 
-  /* Light theme - Modern gradient palette */
-  --background-solid: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f7fee7 100%);
+  /* Light theme - Premium Mesh gradient palette */
+  --background-solid: 
+    radial-gradient(at 0% 0%, hsla(160, 100%, 95%, 1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(150, 100%, 97%, 1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(190, 100%, 95%, 1) 0, transparent 50%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --background: rgba(255, 255, 255);
   --foreground: #0f172a;
   --card: rgba(255, 255, 255, 0.8);
@@ -57,8 +61,12 @@
 
 .dark {
   --radius: 0.75rem;
-  /* Dark theme - Modern gradient palette */
-  --background-solid: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  /* Dark theme - Premium Mesh gradient palette */
+  --background-solid: 
+    radial-gradient(at 0% 0%, hsla(160, 40%, 15%, 1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(210, 40%, 15%, 1) 0, transparent 50%), 
+    radial-gradient(at 100% 100%, hsla(260, 30%, 15%, 1) 0, transparent 50%),
+    linear-gradient(180deg, #09090b 0%, #0f172a 100%);
   --background: rgba(30, 41, 59);
   --foreground: #f1f5f9;
   --card: rgba(30, 41, 59, 0.8);
