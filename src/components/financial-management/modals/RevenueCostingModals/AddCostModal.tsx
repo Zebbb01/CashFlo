@@ -157,15 +157,15 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
         // Remove sm:max-w-[425px] or override it
         className="w-auto min-w-[425px] max-w-[calc(100vw-2rem)] sm:max-w-none md:max-w-max"
       >
-        <DialogHeader>
-          <DialogTitle>Add New Cost</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="text-center sm:text-center">
+          <DialogTitle className="text-2xl font-bold">Add New Cost</DialogTitle>
+          <DialogDescription className="text-center">
             Enter details for a new cost or expense.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="costCategory" className="text-right">
+        <div className="grid gap-5 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="costCategory" className="text-foreground font-semibold">
               Category
             </Label>
             <Input
@@ -173,11 +173,11 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
               placeholder="e.g., Rent, Salaries, Utilities"
               value={newCostCategory}
               onChange={(e) => setNewCostCategory(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="costAmount" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="costAmount" className="text-foreground font-semibold">
               Amount
             </Label>
             <CurrencyInput
@@ -185,11 +185,11 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
               placeholder="e.g., 5000"
               value={newCostAmount}
               onChange={(e) => setNewCostAmount(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="costDescription" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="costDescription" className="text-foreground font-semibold">
               Description
             </Label>
             <Textarea
@@ -197,15 +197,15 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
               placeholder="Details about this cost."
               value={newCostDescription}
               onChange={(e) => setNewCostDescription(e.target.value)}
-              className="col-span-3"
+              className="w-full min-h-[100px]"
             />
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="costBankAsset" className="text-right">
-              Bank Asset
+          <div className="space-y-2">
+            <Label htmlFor="costBankAsset" className="text-foreground font-semibold">
+              Linked Asset
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingAssets ? (
                 <p>Loading assets...</p>
               ) : assets && assets.length > 0 ? (
@@ -234,28 +234,28 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="recordedByUser" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="recordedByUser" className="text-foreground font-semibold">
               Incurred By
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingUsers ? (
                 <p>Loading user...</p>
               ) : (
                 <Input
                   disabled
                   value={incurredByUserName}
-                  className="col-span-3"
+                  className="w-full bg-muted/50"
                 />
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="manualAttribution" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="manualAttribution" className="text-foreground font-semibold">
               Manual Attribution
             </Label>
-            <div className="col-span-3 flex items-center space-x-2">
+            <div className="w-full flex items-center space-x-2">
               <Checkbox
                 id="manualAttribution"
                 style={{ cursor: "pointer" }}
@@ -276,11 +276,11 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
           </div>
 
           {isManualAttribution && newCostBankAssetManagementId && (
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="attributedToUsers" className="text-right pt-2">
+            <div className="space-y-2 bg-muted/20 p-4 rounded-xl border">
+              <Label htmlFor="attributedToUsers" className="text-foreground font-semibold">
                 Attribution To
               </Label>
-              <div className="col-span-3">
+              <div className="w-full">
                 {isLoadingAssetPartnerships || isLoadingUsers ? (
                   <p>Loading partners and owner...</p>
                 ) : partnersOfSelectedAsset.length > 0 ? (
@@ -323,9 +323,12 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-center pt-2">
           <Button
             type="submit"
+            size="lg"
+            variant="gradient"
+            className="w-full max-w-sm"
             onClick={handleAddCost}
             disabled={createCostMutation.isPending || isLoadingAssets || isLoadingUsers || isLoadingAssetPartnerships || !incurredByUserId}
           >

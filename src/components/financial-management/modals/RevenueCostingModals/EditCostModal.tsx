@@ -99,15 +99,15 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Cost Entry</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="text-center sm:text-center">
+          <DialogTitle className="text-2xl font-bold">Edit Cost Entry</DialogTitle>
+          <DialogDescription className="text-center">
             Make changes to the cost entry here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
+        <div className="grid gap-5 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="category" className="text-foreground font-semibold">
               Category
             </Label>
             <Input
@@ -115,11 +115,11 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
               placeholder="e.g., Rent, Salaries"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="amount" className="text-foreground font-semibold">
               Amount
             </Label>
             <CurrencyInput
@@ -127,11 +127,11 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
               placeholder="e.g., 5000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-foreground font-semibold">
               Description
             </Label>
             <Textarea
@@ -139,14 +139,14 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
               placeholder="Optional details."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
+              className="w-full min-h-[100px]"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="bankAsset" className="text-right">
-              Bank Asset
+          <div className="space-y-2">
+            <Label htmlFor="bankAsset" className="text-foreground font-semibold">
+              Linked Asset
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingAssets ? (
                 <p>Loading assets...</p>
               ) : assets && assets.length > 0 ? (
@@ -173,11 +173,11 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
               )}
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="incurredByUser" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="incurredByUser" className="text-foreground font-semibold">
               Incurred By
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingUsers ? ( // Use isLoadingUsers prop here
                 <p>Loading users...</p>
               ) : users && users.length > 0 ? (
@@ -199,9 +199,12 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-center pt-2">
           <Button
             type="submit"
+            size="lg"
+            variant="gradient"
+            className="w-full max-w-sm"
             onClick={handleUpdateCost}
             disabled={updateCostMutation.isPending}
           >

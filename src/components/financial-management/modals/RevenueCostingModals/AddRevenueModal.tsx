@@ -125,15 +125,15 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Revenue</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="text-center sm:text-center">
+          <DialogTitle className="text-2xl font-bold">Add New Revenue</DialogTitle>
+          <DialogDescription className="text-center">
             Enter details for the revenue generated.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="revenueSource" className="text-right">
+        <div className="grid gap-5 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="revenueSource" className="text-foreground font-semibold">
               Source
             </Label>
             <Input
@@ -141,11 +141,11 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
               placeholder="e.g., Sales, Investment Income"
               value={newRevenueSource}
               onChange={(e) => setNewRevenueSource(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="revenueAmount" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="revenueAmount" className="text-foreground font-semibold">
               Amount
             </Label>
             <CurrencyInput
@@ -153,11 +153,11 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
               placeholder="e.g., 15000"
               value={newRevenueAmount}
               onChange={(e) => setNewRevenueAmount(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="revenueDescription" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="revenueDescription" className="text-foreground font-semibold">
               Description
             </Label>
             <Textarea
@@ -165,15 +165,15 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
               placeholder="Details about this revenue."
               value={newRevenueDescription}
               onChange={(e) => setNewRevenueDescription(e.target.value)}
-              className="col-span-3"
+              className="w-full min-h-[100px]"
             />
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="revenueBankAsset" className="text-right">
-              Bank Asset
+          <div className="space-y-2">
+            <Label htmlFor="revenueBankAsset" className="text-foreground font-semibold">
+              Linked Asset
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingAssets ? (
                 <p>Loading assets...</p>
               ) : assets && assets.length > 0 ? (
@@ -201,26 +201,29 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="recordedByUser" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="recordedByUser" className="text-foreground font-semibold">
               Recorded By
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingUsers ? (
                 <p>Loading user...</p>
               ) : (
                 <Input
                   disabled
                   value={recordedByUserName} // Use the derived state here
-                  className="col-span-3"
+                  className="w-full bg-muted/50"
                 />
               )}
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-center pt-2">
           <Button
             type="submit"
+            size="lg"
+            variant="gradient"
+            className="w-full max-w-sm"
             onClick={handleAddRevenue}
             disabled={createRevenueMutation.isPending || isLoadingAssets || isLoadingUsers || !recordedByUserId}
           >

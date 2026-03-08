@@ -98,15 +98,15 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Asset</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="text-center sm:text-center">
+          <DialogTitle className="text-2xl font-bold">Add New Asset</DialogTitle>
+          <DialogDescription className="text-center">
             Enter the details for the new asset. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="newAssetType" className="text-right">
+        <div className="grid gap-5 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="newAssetType" className="text-foreground font-semibold">
               Asset Type
             </Label>
             <Input
@@ -114,11 +114,11 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
               placeholder="e.g., Real Estate, Stocks"
               value={newAssetType}
               onChange={(e) => setNewAssetType(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="newAssetName" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="newAssetName" className="text-foreground font-semibold">
               Asset Name
             </Label>
             <Input
@@ -126,26 +126,26 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
               placeholder="e.g., House, Tesla Shares"
               value={newAssetName}
               onChange={(e) => setNewAssetName(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="newAssetValue" className="text-right">
-              Asset Value (Optional)
+          <div className="space-y-2">
+            <Label htmlFor="newAssetValue" className="text-foreground font-semibold">
+              Asset Value <span className="text-muted-foreground font-normal">(Optional)</span>
             </Label>
             <CurrencyInput
               id="newAssetValue"
               placeholder="e.g., 500000 (Optional)"
               value={newAssetValue}
               onChange={(e) => setNewAssetValue(e.target.value)}
-              className="col-span-3"
+              className="w-full"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="company" className="text-foreground font-semibold">
               Company
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {companies.length > 0 ? (
                 <Select onValueChange={setSelectedCompanyId} value={selectedCompanyId}>
                   <SelectTrigger id="company">
@@ -164,11 +164,11 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
               )}
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="bank" className="text-right">
-              Bank (Optional)
+          <div className="space-y-2">
+            <Label htmlFor="bank" className="text-foreground font-semibold">
+              Bank <span className="text-muted-foreground font-normal">(Optional)</span>
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {banks.length > 0 ? (
                 <Select onValueChange={(value) => setSelectedBankId(value === '__NULL__' ? null : value)} value={selectedBankId || '__NULL__'}>
                   <SelectTrigger id="bank">
@@ -188,11 +188,11 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
               )}
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="owner" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="owner" className="text-foreground font-semibold">
               Owner
             </Label>
-            <div className="col-span-3">
+            <div className="w-full">
               {isLoadingUsers ? (
                 <p>Loading users...</p>
               ) : users && users.length > 0 ? (
@@ -214,9 +214,12 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-center pt-2">
           <Button
             type="submit"
+            size="lg"
+            variant="gradient"
+            className="w-full max-w-sm"
             onClick={handleAddAsset}
             disabled={createAssetMutation.isPending || companies.length === 0 || users.length === 0 || !selectedOwnerId}
           >
