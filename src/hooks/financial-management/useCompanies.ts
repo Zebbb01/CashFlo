@@ -1,63 +1,60 @@
 // src/hooks/financial-management/useCompanies.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Company, CreateCompanyPayload, UpdateCompanyPayload } from "@/types";
 import {
   fetchCompaniesApi, fetchCompanyApi,
   createCompanyApi, updateCompanyApi, deleteCompanyApi
-} from "@/lib/api-clients/company-api"; // Import API functions
-
-const COMPANY_QUERY_KEY = "companies";
+} from "@/lib/api-clients/company-api";
+import { useAppMutation } from "@/hooks/useAppMutation";
+import { companyKeys } from "@/queryKeys/companyKeys";
+import { invalidateCompanyRelatedQueries, invalidateRevenueCostRelatedQueries } from "@/utils/queryInvalidators"; // Import new invalidator
 
 // --- Custom Hooks ---
 
 export const useCompanies = () => {
   return useQuery<Company[], Error>({
-    queryKey: [COMPANY_QUERY_KEY],
-    queryFn: fetchCompaniesApi, // Use imported API function
+    queryKey: companyKeys.list(),
+    queryFn: fetchCompaniesApi,
   });
 };
 
 export const useCompany = (id: string) => {
   return useQuery<Company, Error>({
-    queryKey: [COMPANY_QUERY_KEY, id],
-    queryFn: () => fetchCompanyApi(id), // Use imported API function
+    queryKey: companyKeys.detail(id),
+    queryFn: () => fetchCompanyApi(id),
     enabled: !!id,
   });
 };
 
 export const useCreateCompany = () => {
   const queryClient = useQueryClient();
-  return useMutation<Company, Error, CreateCompanyPayload>({
-    mutationFn: createCompanyApi, // Use imported API function
+  return useAppMutation<Company, Error, CreateCompanyPayload>({
+    mutationFn: createCompanyApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['revenues'] });
-      queryClient.invalidateQueries({ queryKey: ['costs'] });
+      invalidateCompanyRelatedQueries(queryClient);
+      invalidateRevenueCostRelatedQueries(queryClient); // Companies might affect revenues/costs
     },
   });
 };
 
 export const useUpdateCompany = () => {
   const queryClient = useQueryClient();
-  return useMutation<Company, Error, { id: string; payload: UpdateCompanyPayload }>({
-    mutationFn: updateCompanyApi, // Use imported API function
+  return useAppMutation<Company, Error, { id: string; payload: UpdateCompanyPayload }>({
+    mutationFn: updateCompanyApi,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY, variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['revenues'] });
-      queryClient.invalidateQueries({ queryKey: ['costs'] });
+      invalidateCompanyRelatedQueries(queryClient, variables.id);
+      invalidateRevenueCostRelatedQueries(queryClient); // Companies might affect revenues/costs
     },
   });
 };
 
 export const useDeleteCompany = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ message: string }, Error, string>({
-    mutationFn: deleteCompanyApi, // Use imported API function
+  return useAppMutation<{ message: string }, Error, string>({
+    mutationFn: deleteCompanyApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [COMPANY_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['revenues'] });
-      queryClient.invalidateQueries({ queryKey: ['costs'] });
+      invalidateCompanyRelatedQueries(queryClient);
+      invalidateRevenueCostRelatedQueries(queryClient); // Companies might affect revenues/costs
     },
   });
 };

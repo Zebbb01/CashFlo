@@ -36,8 +36,14 @@ export class CostService {
     }) as Promise<CostWithDetails | null>; // Assert the return type
   }
 
-  static async findAll(): Promise<CostWithDetails[]> {
+  static async findAll(userId: string): Promise<CostWithDetails[]> {
     return prisma.cost.findMany({
+      where: {
+        OR: [
+          { userId: userId }, // Costs incurred by the user
+          { costAttributions: { some: { userId: userId } } }, // Costs where user has an attribution
+        ],
+      },
       include: {
         bankAssetManagement: {
           include: {
@@ -77,24 +83,51 @@ export class CostService {
       throw new Error('User incurring cost not found.');
     }
 
+    // --- START OF MODIFIED LOGIC ---
+    // Fetch the asset to get its owner's ID
+    const asset = await prisma.assetManagement.findUnique({
+      where: { id: bankAssetManagementId },
+      select: {
+        userId: true, // Assuming `userId` is the owner's ID field on AssetManagement
+      },
+    });
+
+    if (!asset) {
+      throw new Error('Bank Asset Management not found for attribution validation.');
+    }
+
     let specificAttribution = false;
-    let validAttributedUsers: string[] = [];
+    let finalAttributedUserIds: string[] = []; // Renamed from validAttributedUsers for clarity
 
     if (attributedToUserIds && Array.isArray(attributedToUserIds) && attributedToUserIds.length > 0) {
       specificAttribution = true;
-      const activePartners = await prisma.assetPartnership.findMany({
+
+      // Fetch active partners for the asset
+      const activePartnerships = await prisma.assetPartnership.findMany({
         where: {
           assetId: bankAssetManagementId,
           isActive: true,
-          userId: { in: attributedToUserIds }
         },
         select: { userId: true }
       });
-      validAttributedUsers = activePartners.map(p => p.userId);
-      if (validAttributedUsers.length !== attributedToUserIds.length) {
-        throw new Error('One or more specified attributed users are not active partners for this asset.');
+      const partnerUserIds = activePartnerships.map(p => p.userId);
+
+      // Create a set of all valid users for attribution (owner + partners)
+      const allValidAttributionIds = new Set<string>();
+      if (asset.userId) { // Add asset owner to valid IDs
+        allValidAttributionIds.add(asset.userId);
       }
+      partnerUserIds.forEach(id => allValidAttributionIds.add(id));
+
+      // Check if ALL selected attributedToUserIds are in the set of valid attribution IDs
+      const allSelectedUsersAreValid = attributedToUserIds.every(id => allValidAttributionIds.has(id));
+
+      if (!allSelectedUsersAreValid) {
+        throw new Error('One or more specified attributed users are not valid (not an active partner or the asset owner) for this asset.');
+      }
+      finalAttributedUserIds = attributedToUserIds; // If valid, use them
     }
+    // --- END OF MODIFIED LOGIC ---
 
     const newCost = await prisma.$transaction(async (prisma) => {
       const createdCost = await prisma.cost.create({
@@ -111,14 +144,16 @@ export class CostService {
       const costAttributionsData: Array<{ costId: string; assetId: string; userId: string; attributedAmount: number; percentage: number }> = [];
 
       if (specificAttribution) {
-        const numAttributedUsers = validAttributedUsers.length;
+        const numAttributedUsers = finalAttributedUserIds.length;
         if (numAttributedUsers === 0) {
-          throw new Error('No valid users specified for cost attribution.');
+          // This case should ideally be caught by the frontend validation and the previous backend validation,
+          // but as a safeguard, re-throw if somehow empty.
+          throw new Error('No valid users specified for cost attribution after manual selection.');
         }
         const perUserAmount = createdCost.amount / numAttributedUsers;
         const perUserPercentage = 100 / numAttributedUsers;
 
-        validAttributedUsers.forEach(userId => {
+        finalAttributedUserIds.forEach(userId => {
           costAttributionsData.push({
             costId: createdCost.id,
             assetId: bankAssetManagementId,
@@ -128,6 +163,7 @@ export class CostService {
           });
         });
       } else {
+        // If not specific attribution, automatically attribute based on existing partnership percentages
         const activePartnerships = await prisma.assetPartnership.findMany({
           where: {
             assetId: bankAssetManagementId,
@@ -137,19 +173,21 @@ export class CostService {
 
         let totalPartnerPercentage = activePartnerships.reduce((sum, p) => sum + p.sharePercentage, 0);
 
-        if (totalPartnerPercentage > 100.0001) {
+        if (totalPartnerPercentage > 100.0001) { // Allowing for floating point inaccuracies
           throw new Error('Total active partnership percentage exceeds 100% for this asset. Please correct partnerships before adding cost.');
         }
 
+        // If no active partnerships, attribute 100% to the incurredByUserId
         if (activePartnerships.length === 0) {
           costAttributionsData.push({
             costId: createdCost.id,
             assetId: bankAssetManagementId,
-            userId: incurredByUserId,
+            userId: incurredByUserId, // Fallback to incurred user if no partners
             attributedAmount: createdCost.amount,
             percentage: 100,
           });
         } else {
+          // Attribute based on partnership percentages
           activePartnerships.forEach(p => {
             costAttributionsData.push({
               costId: createdCost.id,
@@ -160,15 +198,20 @@ export class CostService {
             });
           });
 
-          if (totalPartnerPercentage < 99.9999) {
+          // If there's an unallocated percentage (less than 100% total among partners),
+          // attribute the remainder to the user who incurred the cost.
+          if (totalPartnerPercentage < 99.9999) { // Allowing for floating point inaccuracies
             const unallocatedPercentage = 100 - totalPartnerPercentage;
             const unallocatedAmount = createdCost.amount * (unallocatedPercentage / 100);
 
+            // Find if the incurrer is already in attributions (e.g., as a partner)
             const incurrerAttributionIndex = costAttributionsData.findIndex(ca => ca.userId === incurredByUserId);
             if (incurrerAttributionIndex !== -1) {
+              // If already there, add to their existing attribution
               costAttributionsData[incurrerAttributionIndex].attributedAmount += unallocatedAmount;
               costAttributionsData[incurrerAttributionIndex].percentage += unallocatedPercentage;
             } else {
+              // Otherwise, create a new attribution for the incurrer
               costAttributionsData.push({
                 costId: createdCost.id,
                 assetId: bankAssetManagementId,

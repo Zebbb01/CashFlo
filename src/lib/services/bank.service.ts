@@ -32,13 +32,29 @@ export class BankService {
     return this.calculateOverallSavings(bank);
   }
 
-  static async findAll(): Promise<BankWithSavings[]> {
+  static async findAll(userId?: string): Promise<BankWithSavings[]> {
     const banks = await prisma.bank.findMany({
+      where: userId ? {
+        assets: {
+          some: {
+            OR: [
+              { userId: userId },
+              { partnerships: { some: { userId: userId, isActive: true } } }
+            ]
+          }
+        }
+      } : {},
       orderBy: {
         createdAt: 'desc',
       },
       include: {
         assets: {
+          where: userId ? {
+            OR: [
+              { userId: userId },
+              { partnerships: { some: { userId: userId, isActive: true } } }
+            ]
+          } : {},
           include: {
             revenuesForBank: true,
             costsForBank: true,

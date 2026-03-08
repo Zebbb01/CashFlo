@@ -53,7 +53,7 @@ export function SignUpForm() {
           </Alert>
         )}
         
-        <div className="grid gap-4 fade-in fade-in-delay-1">
+        <div className="grid gap-1 fade-in fade-in-delay-1">
           <Label htmlFor="signUpName" className="text-sm font-medium">
             Full Name
           </Label>
@@ -67,12 +67,12 @@ export function SignUpForm() {
               onChange={(e) => setName(e.target.value)}
               required
               disabled={isSignUpLoading}
-              className="pl-10 h-12 bg-white/50 dark:bg-white/5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+              className="pl-10 h-12 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
             />
           </div>
         </div>
-        
-        <div className="grid gap-4 fade-in fade-in-delay-2">
+
+        <div className="grid gap-1 fade-in fade-in-delay-2">
           <Label htmlFor="signUpEmail" className="text-sm font-medium">
             Email Address
           </Label>
@@ -86,7 +86,7 @@ export function SignUpForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isSignUpLoading}
-              className="pl-10 h-12 bg-white/50 dark:bg-white/5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+              className="pl-10 h-12 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
             />
           </div>
         </div>
@@ -117,7 +117,7 @@ export function SignUpForm() {
         
         <Button 
           type="submit" 
-          className="w-full h-12 btn-gradient-primary rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 group fade-in fade-in-delay-4" 
+          className="fade-in fade-in-delay-4" 
           disabled={isSignUpLoading}
         >
           {isSignUpLoading ? (
@@ -132,7 +132,7 @@ export function SignUpForm() {
           )}
         </Button>
         
-        <p className="mt-6 text-center text-sm text-muted-foreground fade-in fade-in-delay-4">
+        <p className="text-center text-sm text-muted-foreground fade-in fade-in-delay-4">
           Already have an account?{" "}
           <Link 
             href="/login" 

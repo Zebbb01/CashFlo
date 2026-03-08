@@ -17,8 +17,18 @@ export class CompanyService {
     });
   }
 
-  static async findAll(): Promise<Company[]> {
+  static async findAll(userId?: string): Promise<Company[]> {
     return prisma.company.findMany({
+      where: userId ? {
+        assets: {
+          some: {
+            OR: [
+              { userId: userId },
+              { partnerships: { some: { userId: userId, isActive: true } } }
+            ]
+          }
+        }
+      } : {},
       orderBy: {
         createdAt: 'desc',
       },

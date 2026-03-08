@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 
 export const GET = withMiddleware(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const company = await CompanyService.findById(id);
 
     if (!company) {
@@ -22,15 +22,15 @@ export const GET = withMiddleware(async (req, { params }) => {
 
 export const PUT = withMiddleware(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const validatedData = updateCompanySchema.parse(body);
 
     const updatedCompany = await CompanyService.update(id, validatedData);
     return NextResponse.json(updatedCompany, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating company:', error);
-    if (error.code === 'P2025') { // Prisma error code for record not found
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2025') { // Prisma error code for record not found
       return NextResponse.json({ error: 'Company not found' }, { status: 404 });
     }
     return NextResponse.json({ error: 'Failed to update company' }, { status: 500 });
@@ -39,12 +39,12 @@ export const PUT = withMiddleware(async (req, { params }) => {
 
 export const DELETE = withMiddleware(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     await CompanyService.delete(id);
     return NextResponse.json({ error: 'Company deleted successfully' }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting company:', error);
-    if (error.code === 'P2025') { // Prisma error code for record not found
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2025') { // Prisma error code for record not found
       return NextResponse.json({ error: 'Company not found' }, { status: 404 });
     }
     return NextResponse.json({ error: 'Failed to delete company' }, { status: 500 });

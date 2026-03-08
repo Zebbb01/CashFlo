@@ -1,53 +1,51 @@
 // src/hooks/financial-management/useRevenueCost.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Revenue, Cost,
   CreateRevenuePayload, UpdateRevenuePayload,
   CreateCostPayload, UpdateCostPayload
 } from "@/types";
-import { useAssets } from "./useAssets"; // This import remains
-
 import {
   fetchRevenuesApi, fetchRevenueApi, createRevenueApi, updateRevenueApi, deleteRevenueApi
-} from "@/lib/api-clients/revenue-api"; // Import Revenue API functions
+} from "@/lib/api-clients/revenue-api";
 import {
   fetchCostsApi, fetchCostApi, createCostApi, updateCostApi, deleteCostApi
-} from "@/lib/api-clients/cost-api"; // Import Cost API functions
+} from "@/lib/api-clients/cost-api";
+import { invalidateRevenueCostRelatedQueries } from "@/utils/queryInvalidators";
+import { revenueCostKeys } from "@/queryKeys/revenueCostKeys";
+import { assetKeys } from "@/queryKeys/assetKeys"; // Needed for assetColleagueDetails invalidation
+import { useAppMutation } from "@/hooks/useAppMutation"; // Import the generic mutation hook
+import { useAssets } from "./useAssets";
 
-const REVENUE_QUERY_KEY = "revenues";
-const COST_QUERY_KEY = "costs";
-export const TOTALS_QUERY_KEY = "financialTotals";
+export const TOTALS_QUERY_KEY = revenueCostKeys.totals()[0]; // Export as a string for use in other files if needed
 
 // --- Custom Hooks for Revenue ---
 export const useRevenues = () => {
   return useQuery<Revenue[], Error>({
-    queryKey: [REVENUE_QUERY_KEY],
-    queryFn: fetchRevenuesApi, // Use imported API function
+    queryKey: revenueCostKeys.revenueList(),
+    queryFn: fetchRevenuesApi,
   });
 };
 
 export const useRevenue = (id: string) => {
   return useQuery<Revenue, Error>({
-    queryKey: [REVENUE_QUERY_KEY, id],
-    queryFn: () => fetchRevenueApi(id), // Use imported API function
+    queryKey: revenueCostKeys.revenueDetail(id),
+    queryFn: () => fetchRevenueApi(id),
     enabled: !!id,
   });
 };
 
 export const useCreateRevenue = () => {
   const queryClient = useQueryClient();
-  return useMutation<Revenue, Error, CreateRevenuePayload>({
-    mutationFn: createRevenueApi, // Use imported API function
+  return useAppMutation<Revenue, Error, CreateRevenuePayload>({
+    mutationFn: createRevenueApi,
     onSuccess: (newRevenue) => {
-      queryClient.invalidateQueries({ queryKey: [REVENUE_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['banks'] });
+      invalidateRevenueCostRelatedQueries(queryClient);
       if (newRevenue.bankAssetManagementId) {
-        queryClient.invalidateQueries({ queryKey: ['assetColleagueDetails', newRevenue.bankAssetManagementId] });
+        queryClient.invalidateQueries({ queryKey: assetKeys.partnershipDetails(newRevenue.bankAssetManagementId, 'self') }); // Assuming 'self' or similar for direct bank asset management
       }
       newRevenue.revenueShares?.forEach(share => {
-        queryClient.invalidateQueries({ queryKey: ['assetColleagueDetails', share.assetId, share.userId] });
+        queryClient.invalidateQueries({ queryKey: assetKeys.partnershipDetails(share.assetId, share.userId) });
       });
     },
   });
@@ -55,27 +53,21 @@ export const useCreateRevenue = () => {
 
 export const useUpdateRevenue = () => {
   const queryClient = useQueryClient();
-  return useMutation<Revenue, Error, { id: string; payload: UpdateRevenuePayload }>({
-    mutationFn: updateRevenueApi, // Use imported API function
+  return useAppMutation<Revenue, Error, { id: string; payload: UpdateRevenuePayload }>({
+    mutationFn: updateRevenueApi,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [REVENUE_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [REVENUE_QUERY_KEY, variables.id] });
-      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['banks'] });
+      queryClient.invalidateQueries({ queryKey: revenueCostKeys.revenueDetail(variables.id) });
+      invalidateRevenueCostRelatedQueries(queryClient);
     },
   });
 };
 
 export const useDeleteRevenue = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ message: string }, Error, string>({
-    mutationFn: deleteRevenueApi, // Use imported API function
+  return useAppMutation<{ message: string }, Error, string>({
+    mutationFn: deleteRevenueApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [REVENUE_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['banks'] });
+      invalidateRevenueCostRelatedQueries(queryClient);
     },
   });
 };
@@ -83,33 +75,30 @@ export const useDeleteRevenue = () => {
 // --- Custom Hooks for Cost ---
 export const useCosts = () => {
   return useQuery<Cost[], Error>({
-    queryKey: [COST_QUERY_KEY],
-    queryFn: fetchCostsApi, // Use imported API function
+    queryKey: revenueCostKeys.costList(),
+    queryFn: fetchCostsApi,
   });
 };
 
 export const useCost = (id: string) => {
   return useQuery<Cost, Error>({
-    queryKey: [COST_QUERY_KEY, id],
-    queryFn: () => fetchCostApi(id), // Use imported API function
+    queryKey: revenueCostKeys.costDetail(id),
+    queryFn: () => fetchCostApi(id),
     enabled: !!id,
   });
 };
 
 export const useCreateCost = () => {
   const queryClient = useQueryClient();
-  return useMutation<Cost, Error, CreateCostPayload>({
-    mutationFn: createCostApi, // Use imported API function
+  return useAppMutation<Cost, Error, CreateCostPayload>({
+    mutationFn: createCostApi,
     onSuccess: (newCost) => {
-      queryClient.invalidateQueries({ queryKey: [COST_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['banks'] });
+      invalidateRevenueCostRelatedQueries(queryClient);
       if (newCost.bankAssetManagementId) {
-        queryClient.invalidateQueries({ queryKey: ['assetColleagueDetails', newCost.bankAssetManagementId] });
+        queryClient.invalidateQueries({ queryKey: assetKeys.partnershipDetails(newCost.bankAssetManagementId, 'self') }); // Assuming 'self' or similar
       }
       newCost.costAttributions?.forEach(attribution => {
-        queryClient.invalidateQueries({ queryKey: ['assetColleagueDetails', attribution.assetId, attribution.userId] });
+        queryClient.invalidateQueries({ queryKey: assetKeys.partnershipDetails(attribution.assetId, attribution.userId) });
       });
     },
   });
@@ -117,31 +106,24 @@ export const useCreateCost = () => {
 
 export const useUpdateCost = () => {
   const queryClient = useQueryClient();
-  return useMutation<Cost, Error, { id: string; payload: UpdateCostPayload }>({
-    mutationFn: updateCostApi, // Use imported API function
+  return useAppMutation<Cost, Error, { id: string; payload: UpdateCostPayload }>({
+    mutationFn: updateCostApi,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [COST_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [COST_QUERY_KEY, variables.id] });
-      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['banks'] });
+      queryClient.invalidateQueries({ queryKey: revenueCostKeys.costDetail(variables.id) });
+      invalidateRevenueCostRelatedQueries(queryClient);
     },
   });
 };
 
 export const useDeleteCost = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ message: string }, Error, string>({
-    mutationFn: deleteCostApi, // Use imported API function
+  return useAppMutation<{ message: string }, Error, string>({
+    mutationFn: deleteCostApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [COST_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [TOTALS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      queryClient.invalidateQueries({ queryKey: ['banks'] });
+      invalidateRevenueCostRelatedQueries(queryClient);
     },
   });
 };
-
 
 // --- Combined Hook for Totals ---
 export const useFinancialTotals = () => {

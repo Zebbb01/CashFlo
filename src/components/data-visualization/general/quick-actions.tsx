@@ -1,4 +1,4 @@
-// src/components/data-visualization/quick-actions.tsx
+// src/components/data-visualization/general/quick-actions.tsx
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

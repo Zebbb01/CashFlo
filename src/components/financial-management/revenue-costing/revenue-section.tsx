@@ -1,7 +1,7 @@
 // src/components/financial-management/revenue-section.tsx
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable } from "@/components/data-table";
 import { Revenue } from "@/types";
 import {
   DropdownMenu,

@@ -3,10 +3,10 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable } from "@/components/data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { Asset, Company, Bank, User } from "@/types"; // Ensure all types are imported
+import { Asset } from "@/types"; // Ensure all types are imported
 
 interface AssetTableSectionProps {
   assets: Asset[];
@@ -111,11 +111,12 @@ export function AssetTableSection({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => handleViewAsset(asset)}>View</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleManageColleagues(asset)}>Manage Colleagues</DropdownMenuItem>
             {/* Actions (Edit, Manage Colleagues, Delete) are only visible to the primary owner */}
             {asset.userId === currentUserId && (
               <>
                 <DropdownMenuItem onClick={() => handleEditAsset(asset)}>Edit</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleManageColleagues(asset)}>Manage Colleagues</DropdownMenuItem>
+
                 <DropdownMenuItem onClick={() => handleDeleteClick(asset.id)} className="text-red-600 focus:text-red-600">
                   Delete
                 </DropdownMenuItem>

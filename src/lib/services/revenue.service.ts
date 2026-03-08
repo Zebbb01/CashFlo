@@ -35,8 +35,14 @@ export class RevenueService {
     }) as Promise<RevenueWithDetails | null>; // Assert the return type
   }
 
-  static async findAll(): Promise<RevenueWithDetails[]> {
+  static async findAll(userId: string): Promise<RevenueWithDetails[]> {
     return prisma.revenue.findMany({
+      where: {
+        OR: [
+          { userId: userId }, // Revenues recorded by the user
+          { revenueShares: { some: { userId: userId } } }, // Revenues where user has a share
+        ],
+      },
       include: {
         bankAssetManagement: {
           include: {

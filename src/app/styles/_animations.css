@@ -1,0 +1,90 @@
+/* src/app/styles/_animations.css */
+
+@layer components {
+  /* Floating animation */
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+  @keyframes floating {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Pulse animation */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+    }
+  }
+
+  /* Fade in animations */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+  .fade-in-delay-1 {
+    animation-delay: 0.2s;
+  }
+  .fade-in-delay-2 {
+    animation-delay: 0.4s;
+  }
+  .fade-in-delay-3 {
+    animation-delay: 0.6s;
+  }
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Shimmer effect (for backgrounds/elements) */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Shimmer Text effect */
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--primary), /* Slightly more opaque for better visibility on text */
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s infinite; /* Reusing the shimmer keyframes */
+    -webkit-background-clip: text; /* Essential for clipping background to text */
+    background-clip: text; /* Standard property */
+    color: transparent; /* Makes the original text color transparent */
+  }  
+  
+  /* The @keyframes shimmer can be shared by shimmer and shimmer-text */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}

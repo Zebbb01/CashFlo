@@ -7,8 +7,9 @@ export type AuthenticatedRequest = NextRequest & {
   user: { id: string; email: string; name?: string };
 };
 
+// Updated: params is now a Promise in Next.js 15
 export type APIContext = {
-  params: Record<string, string>;
+  params: Promise<Record<string, string>>;
 };
 
 // Modified: Allow APIHandler to return an error response type as well

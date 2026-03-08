@@ -1,5 +1,5 @@
 // src/components/financial-management/modals/AddRevenueModal.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,13 @@ import { toast } from "sonner";
 import { useCreateRevenue } from "@/hooks/financial-management/useRevenueCost";
 import { useAssets } from "@/hooks/financial-management/useAssets";
 import { User } from "@/types";
+import { useSession } from "next-auth/react";
 
 interface AddRevenueModalProps {
   isOpen: boolean;
   onClose: () => void;
   users: User[];
-  isLoadingUsers: boolean; // NEW: Pass isLoadingUsers as a prop
+  isLoadingUsers: boolean;
 }
 
 export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddRevenueModalProps) {
@@ -29,20 +30,47 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
   const [newRevenueAmount, setNewRevenueAmount] = useState<string>("");
   const [newRevenueDescription, setNewRevenueDescription] = useState("");
   const [newRevenueBankAssetManagementId, setNewRevenueBankAssetManagementId] = useState<string | null>(null);
-  const [recordedByUserId, setRecordedByUserId] = useState<string>("");
+  const [recordedByUserId, setRecordedByUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
 
   const { data: assets, isLoading: isLoadingAssets } = useAssets();
   const createRevenueMutation = useCreateRevenue();
 
-  const currentAuthenticatedUserId = "some-authenticated-user-id"; // REPLACE THIS
+  // IMPORTANT: This needs to come from your actual authentication context/hook.
+  // For demonstration, let's assume you have a way to get the current user's ID.
+  // Replace `useAuth` with your actual authentication hook/context.
+  // Example: const { user: authUser, isLoading: isLoadingAuth } = useAuth();
+  // For now, let's keep it as a placeholder, but understand this is the primary source of truth.
+  const currentAuthenticatedUser: User | undefined = users.find(u => u.id === session?.user?.id);
+  const currentAuthenticatedUserId = currentAuthenticatedUser?.id || null;
 
-  React.useEffect(() => {
-    if (currentAuthenticatedUserId && !recordedByUserId) {
-      setRecordedByUserId(currentAuthenticatedUserId);
-    } else if (!currentAuthenticatedUserId && users.length > 0 && !recordedByUserId) {
-      setRecordedByUserId(users[0].id);
+  useEffect(() => {
+    // This effect ensures recordedByUserId is set based on available user data
+    if (!isLoadingUsers && users.length > 0) {
+      if (currentAuthenticatedUserId) {
+        // If an authenticated user exists and is in the 'users' list
+        if (users.some(u => u.id === currentAuthenticatedUserId)) {
+          setRecordedByUserId(currentAuthenticatedUserId);
+        } else {
+          // If authenticated user ID is not found in the fetched 'users' list, default to first available user
+          setRecordedByUserId(users[0].id);
+          console.warn("Authenticated user ID not found in fetched users list. Defaulting to first user.");
+        }
+      } else if (!recordedByUserId) {
+        // If no authenticated user, and recordedByUserId is not yet set, default to the first user in the list
+        setRecordedByUserId(users[0].id);
+      }
+    } else if (!isLoadingUsers && users.length === 0 && !recordedByUserId) {
+      // Handle case where there are no users available at all
+      setRecordedByUserId(null); // Explicitly set to null if no users
+      console.warn("No users available to set as 'Recorded By'.");
     }
-  }, [currentAuthenticatedUserId, users, recordedByUserId]);
+  }, [currentAuthenticatedUserId, users, isLoadingUsers, recordedByUserId]); // Depend on isLoadingUsers as well
+
+  // Derived state for display purposes
+  const selectedUser = users.find((u) => u.id === recordedByUserId);
+  const recordedByUserName = selectedUser?.name || selectedUser?.email || "Unknown User";
+
 
   const handleAddRevenue = async () => {
     if (!newRevenueSource || !newRevenueAmount || !recordedByUserId) {
@@ -77,11 +105,14 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
       toast.success("Revenue Added", {
         description: "New revenue entry has been successfully added.",
       });
+      // Reset form fields
       setNewRevenueSource("");
       setNewRevenueAmount("");
       setNewRevenueDescription("");
       setNewRevenueBankAssetManagementId(null);
-      setRecordedByUserId("");
+      // Do NOT reset recordedByUserId to null immediately after success
+      // Let the useEffect handle it on next open or keep the pre-selected user.
+      // setRecordedByUserId(null); // <-- Removed this to prevent immediate reset
       onClose();
     } catch (err: any) {
       toast.error("Failed to add revenue", {
@@ -159,7 +190,7 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
                     <SelectItem value="__NULL__">None</SelectItem>
                     {assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.assetName} (Company: {asset.company?.name || 'N/A'})
+                        {asset.assetName}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -175,23 +206,14 @@ export function AddRevenueModal({ isOpen, onClose, users, isLoadingUsers }: AddR
               Recorded By
             </Label>
             <div className="col-span-3">
-              {isLoadingUsers ? ( // Use isLoadingUsers prop here
-                <p>Loading users...</p>
-              ) : users && users.length > 0 ? (
-                <Select onValueChange={setRecordedByUserId} value={recordedByUserId}>
-                  <SelectTrigger id="recordedByUser">
-                    <SelectValue placeholder="Select user who recorded revenue" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name || user.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {isLoadingUsers ? (
+                <p>Loading user...</p>
               ) : (
-                <p className="text-muted-foreground text-sm">No users available.</p>
+                <Input
+                  disabled
+                  value={recordedByUserName} // Use the derived state here
+                  className="col-span-3"
+                />
               )}
             </div>
           </div>

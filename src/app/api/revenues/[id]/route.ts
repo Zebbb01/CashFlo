@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 
 export const GET = withMiddleware(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const revenue = await RevenueService.findById(id);
 
     if (!revenue) {
@@ -23,15 +23,15 @@ export const GET = withMiddleware(async (req, { params }) => {
 
 export const PUT = withMiddleware(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const validatedData = updateRevenueSchema.parse(body);
 
     const updatedRevenue = await RevenueService.update(id, validatedData);
     return NextResponse.json(updatedRevenue, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating revenue:', error);
-    if (error.code === 'P2025') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2025') {
       // Changed 'message' to 'error'
       return NextResponse.json({ error: 'Revenue not found' }, { status: 404 });
     }
@@ -42,12 +42,12 @@ export const PUT = withMiddleware(async (req, { params }) => {
 
 export const DELETE = withMiddleware(async (req, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     await RevenueService.delete(id);
     return NextResponse.json({ message: 'Revenue deleted successfully' }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting revenue:', error);
-    if (error.code === 'P2025') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2025') {
       // Changed 'message' to 'error'
       return NextResponse.json({ error: 'Revenue not found' }, { status: 404 });
     }

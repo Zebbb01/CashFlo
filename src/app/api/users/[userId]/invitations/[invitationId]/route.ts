@@ -7,7 +7,9 @@ import { NextResponse } from 'next/server';
 // PUT - Accept or reject invitation
 export const PUT = withMiddleware(async (req, { params }) => {
   try {
-    const { invitationId } = params;
+    // Await params to resolve the promise
+    const resolvedParams = await params;
+    const { invitationId } = resolvedParams;
     const body = await req.json();
 
     // Validate the action using Zod
@@ -29,17 +31,20 @@ export const PUT = withMiddleware(async (req, { params }) => {
     );
 
     return NextResponse.json(result, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error handling partnership invitation:', error);
     // Align error responses with the `withMiddleware` format
-    if (error.name === 'ZodError') {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+    if (typeof error === 'object' && error !== null && 'name' in error && (error as { name?: string }).name === 'ZodError') {
+      const zodErrors = (error as { errors?: Array<{ message: string }> }).errors;
+      const errorMsg = Array.isArray(zodErrors) ? zodErrors.map(e => e.message).join(', ') : 'Validation failed';
+      return NextResponse.json({ error: errorMsg }, { status: 400 });
     }
-    if (error.message.includes('not found') || error.message.includes('not for this user')) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('not found') || errorMessage.includes('not for this user')) {
+      return NextResponse.json({ error: errorMessage }, { status: 404 });
     }
-    if (error.message.includes('already been') || error.message.includes('expired') || error.message.includes('exceeding 100%')) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (errorMessage.includes('already been') || errorMessage.includes('expired') || errorMessage.includes('exceeding 100%')) {
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
     return NextResponse.json({ error: 'Failed to handle invitation.' }, { status: 500 });
   }

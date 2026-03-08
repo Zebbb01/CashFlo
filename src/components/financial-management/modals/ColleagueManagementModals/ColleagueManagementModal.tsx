@@ -23,7 +23,7 @@ interface ColleagueManagementModalProps {
   onClose: () => void;
   selectedAsset: Asset | null;
   users: User[];
-  currentUserId: string; // Add currentUserId to props
+  currentUserId: string;
 }
 
 export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users, currentUserId }: ColleagueManagementModalProps) {
@@ -31,15 +31,16 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
   const [newPartnerShare, setNewPartnerShare] = useState<string>("");
   const [newPartnerMessage, setNewPartnerMessage] = useState<string>("");
 
+  // useAssetPartnerships fetches the `AssetColleaguesResponse` type, which contains `partnerships: any[]`
+  // It also includes `totalAllocated` and `availablePercentage`. This is appropriate for the modal.
   const { data: assetPartnershipsData, isLoading: isLoadingAssetPartnerships } = useAssetPartnerships(selectedAsset?.id || '');
   const sendInvitationMutation = useSendPartnershipInvitation();
   const updatePartnershipMutation = useUpdateAssetPartnership();
   const deactivatePartnershipMutation = useDeactivateAssetPartnership();
 
   // Determine if the current user is the owner of the selected asset
-  // CORRECTED LINE: Ensure selectedAsset and selectedAsset.ownerId are not null/undefined
-  const isOwner = selectedAsset?.userId !== null && selectedAsset?.userId === currentUserId;
-
+  // CORRECTED LINE: Use optional chaining and nullish coalescing for safety
+  const isOwner = selectedAsset?.userId === currentUserId;
 
   const handleSendInvitation = async () => {
     if (!selectedAsset?.id || !newPartnerId || !newPartnerShare) {
@@ -52,12 +53,21 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
       return;
     }
 
+    // Check if the selected partner is already part of the asset
+    const existingPartnership = assetPartnershipsData?.partnerships.some(
+      (p: any) => p.userId === newPartnerId
+    );
+    if (existingPartnership) {
+      toast.info("Partner Exists", { description: "This user is already a partner or has a pending invitation for this asset." });
+      return;
+    }
+
+
     try {
-      // Ensure senderId is explicitly the current user's ID
       await sendInvitationMutation.mutateAsync({
         assetId: selectedAsset.id,
         payload: {
-          senderId: currentUserId, // Explicitly pass senderId
+          senderId: currentUserId,
           receiverId: newPartnerId,
           sharePercentage: share,
           message: newPartnerMessage || undefined,
@@ -73,8 +83,8 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
   };
 
   const handleUpdatePartnership = async (partnership: AssetPartnership, newSharePercentage?: number, newIsActive?: boolean) => {
-    if (!isOwner) { // This check relies on the corrected isOwner logic
-      toast.error("Unauthorized", { description: "Only the asset owner can manage partnerships." });
+    if (!isOwner && partnership.userId !== currentUserId) { // Ensure only owner can manage others, or user can manage their own
+      toast.error("Unauthorized", { description: "You are not authorized to update this partnership." });
       return;
     }
     try {
@@ -93,16 +103,24 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
   };
 
   const handleDeactivatePartnership = async (partnership: AssetPartnership) => {
-    if (!isOwner) { // This check relies on the corrected isOwner logic
-      toast.error("Unauthorized", { description: "Only the asset owner can deactivate partnerships." });
+    // Only owner can deactivate others. A partner can "leave" (deactivate themselves)
+    if (!isOwner && partnership.userId !== currentUserId) {
+      toast.error("Unauthorized", { description: "You are not authorized to deactivate this partnership." });
       return;
     }
+    // Prevent owner from deactivating themselves if they are the only partner or it breaks something critical.
+    // This logic might need refinement based on business rules.
+    if (isOwner && partnership.userId === currentUserId && assetPartnershipsData?.partnerships.length === 1) {
+        toast.error("Cannot Deactivate", { description: "As the owner, you cannot deactivate yourself if you are the only partner. Consider deleting the asset if it's no longer needed." });
+        return;
+    }
+
     try {
       await deactivatePartnershipMutation.mutateAsync({
         assetId: partnership.assetId,
         userId: partnership.userId,
       });
-      toast.success("Partner Deactivated", { description: "Partner successfully deactivated for this asset." });
+      toast.success("Partner Deactivated", { description: `Partner ${partnership.userId === currentUserId ? 'left' : 'deactivated for'} this asset.` });
     } catch (error: any) {
       toast.error("Failed to Deactivate Partner", { description: error.message || "An unexpected error occurred." });
     }
@@ -123,30 +141,36 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
             <div>Loading partnerships...</div>
           ) : assetPartnershipsData?.partnerships && assetPartnershipsData.partnerships.length > 0 ? (
             <div className="space-y-2">
-              {assetPartnershipsData.partnerships.map(p => (
+              {/* Ensure p.user is available for display; add checks if needed */}
+              {assetPartnershipsData.partnerships.map((p: any) => ( // Cast to any or define a more specific type if `p.user` isn't in AssetPartnership
                 <div key={p.id} className="flex justify-between items-center p-2 border rounded-md">
                   <span>{p.user?.name || p.user?.email} ({p.sharePercentage}%) - {p.isActive ? "Active" : "Inactive"}</span>
-                  {isOwner && ( // Only owner can manage other partners
-                    <div className="flex gap-2">
-                      {p.userId !== currentUserId && ( // Owner can deactivate/activate anyone but themselves
-                        <>
-                           <Button variant="outline" size="sm" onClick={() => handleUpdatePartnership(p, undefined, !p.isActive)}>
-                            {p.isActive ? "Deactivate" : "Activate"}
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDeactivatePartnership(p)}>Remove</Button>
-                        </>
-                      )}
-                       {/* Owner can update their own share if they are also a partner */}
-                       {p.userId === currentUserId && p.isActive && (
-                          <Button variant="outline" size="sm" onClick={() => toast.info("Feature Coming Soon", { description: "Owners managing their own share percentage is coming soon!" })}>
-                             Update My Share
-                          </Button>
-                       )}
-                    </div>
-                  )}
-                  {!isOwner && p.userId === currentUserId && p.isActive && (
-                      <Button variant="destructive" size="sm" onClick={() => handleDeactivatePartnership(p)}>Leave Partnership</Button>
-                  )}
+                  {/* Conditional actions based on ownership and partner identity */}
+                  <div className="flex gap-2">
+                    {/* Owner can activate/deactivate others */}
+                    {isOwner && p.userId !== currentUserId && (
+                      <Button variant="default" size="sm" onClick={() => handleUpdatePartnership(p, undefined, !p.isActive)}
+                        disabled={updatePartnershipMutation.isPending}>
+                        {p.isActive ? "Deactivate" : "Activate"}
+                      </Button>
+                    )}
+                    {/* Owner can remove any partner (except potentially themselves if it's the only one) */}
+                    {isOwner && p.userId !== currentUserId && (
+                      <Button variant="outlineDestructive" size="sm" onClick={() => handleDeactivatePartnership(p)}
+                        disabled={deactivatePartnershipMutation.isPending}>Remove</Button>
+                    )}
+                    {/* A partner (who is not the owner of this asset) can leave */}
+                    {!isOwner && p.userId === currentUserId && p.isActive && (
+                       <Button variant="outlineDestructive" size="sm" onClick={() => handleDeactivatePartnership(p)}
+                          disabled={deactivatePartnershipMutation.isPending}>Leave Partnership</Button>
+                    )}
+                    {/* Owner managing their own share if they are also a partner in this asset */}
+                    {isOwner && p.userId === currentUserId && p.isActive && (
+                      <Button variant="outline" size="sm" onClick={() => toast.info("Feature Coming Soon", { description: "Owners managing their own share percentage is coming soon!" })}>
+                          Update My Share
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
               <p className="text-sm text-muted-foreground mt-2">Total Allocated: {assetPartnershipsData.totalAllocated.toFixed(2)}% | Available: {assetPartnershipsData.availablePercentage.toFixed(2)}%</p>
@@ -169,8 +193,11 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
                         <SelectValue placeholder="Select a user to invite" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map(user => (
-                          <SelectItem key={user.id} value={user.id}>{user.name || user.email}</SelectItem>
+                        {users
+                            .filter(user => user.id !== currentUserId) // Don't allow inviting self if already owner
+                            .filter(user => !assetPartnershipsData?.partnerships.some((p: any) => p.userId === user.id)) // Filter out already partnered users
+                            .map(user => (
+                            <SelectItem key={user.id} value={user.id}>{user.name || user.email}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -188,6 +215,9 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
                   value={newPartnerShare}
                   onChange={(e) => setNewPartnerShare(e.target.value)}
                   className="col-span-3"
+                  min="0.01"
+                  max="100"
+                  step="0.01"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -202,7 +232,14 @@ export function ColleagueManagementModal({ isOpen, onClose, selectedAsset, users
               </div>
               <Button
                 onClick={handleSendInvitation}
-                disabled={sendInvitationMutation.isPending || !newPartnerId || !newPartnerShare || !selectedAsset || users?.length === 0}
+                disabled={
+                  sendInvitationMutation.isPending ||
+                  !newPartnerId ||
+                  !newPartnerShare ||
+                  !selectedAsset ||
+                  (users?.length === 0) ||
+                  (parseFloat(newPartnerShare) <= 0 || parseFloat(newPartnerShare) > 100) // Disable if share is invalid
+                }
               >
                 {sendInvitationMutation.isPending ? "Sending Invitation..." : "Send Invitation"}
               </Button>

@@ -1,53 +1,51 @@
 // src/hooks/financial-management/useBanks.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bank, CreateBankPayload, UpdateBankPayload } from '@/types';
 import {
   fetchBanksApi,
   createBankApi,
   updateBankApi,
   deleteBankApi
-} from '@/lib/api-clients/bank-api'; // Import API functions
-
-const BANK_QUERY_KEY = 'banks';
+} from '@/lib/api-clients/bank-api';
+import { useAppMutation } from "@/hooks/useAppMutation";
+import { bankKeys } from "@/queryKeys/bankKeys";
+import { invalidateBankRelatedQueries } from "@/utils/queryInvalidators"; // Import new invalidator
 
 // --- Custom Hooks ---
 
 export const useBanks = () => {
   return useQuery<Bank[], Error>({
-    queryKey: [BANK_QUERY_KEY],
-    queryFn: fetchBanksApi, // Use imported API function
+    queryKey: bankKeys.list(),
+    queryFn: fetchBanksApi,
   });
 };
 
 export const useCreateBank = () => {
   const queryClient = useQueryClient();
-  return useMutation<Bank, Error, CreateBankPayload>({
-    mutationFn: createBankApi, // Use imported API function
+  return useAppMutation<Bank, Error, CreateBankPayload>({
+    mutationFn: createBankApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [BANK_QUERY_KEY] });
+      invalidateBankRelatedQueries(queryClient);
     },
   });
 };
 
 export const useUpdateBank = () => {
   const queryClient = useQueryClient();
-  return useMutation<Bank, Error, { id: string; payload: UpdateBankPayload }>({
-    mutationFn: updateBankApi, // Use imported API function
+  return useAppMutation<Bank, Error, { id: string; payload: UpdateBankPayload }>({
+    mutationFn: updateBankApi,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [BANK_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [BANK_QUERY_KEY, variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      invalidateBankRelatedQueries(queryClient, variables.id);
     },
   });
 };
 
 export const useDeleteBank = () => {
   const queryClient = useQueryClient();
-  return useMutation<{ message: string }, Error, string>({
-    mutationFn: deleteBankApi, // Use imported API function
+  return useAppMutation<{ message: string }, Error, string>({
+    mutationFn: deleteBankApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [BANK_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      invalidateBankRelatedQueries(queryClient);
     },
   });
 };

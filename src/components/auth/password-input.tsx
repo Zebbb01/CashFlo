@@ -18,7 +18,7 @@ export function PasswordInput({ label, id, className, ...props }: PasswordInputP
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-1">
       <Label htmlFor={id} className="text-sm font-medium">
         {label}
       </Label>
@@ -28,7 +28,7 @@ export function PasswordInput({ label, id, className, ...props }: PasswordInputP
           id={id}
           type={showPassword ? "text" : "password"}
           className={cn(
-            "pl-10 pr-12 h-12 bg-white/50 dark:bg-white/5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300",
+            "pl-10 pr-12 h-12 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300",
             className
           )}
           {...props}

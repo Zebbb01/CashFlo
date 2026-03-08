@@ -10,10 +10,12 @@ import { NextResponse } from 'next/server';
  */
 export const GET = withMiddleware(async (req, { params }) => {
   try {
-    const { userId } = params; // params is already resolved by Next.js/route handlers
+    // In Next.js 15, params is a Promise and needs to be awaited
+    const resolvedParams = await params;
+    const { userId } = resolvedParams;
 
     const { searchParams } = new URL(req.url);
-    const type = searchParams.get('type'); // 'received', 'sent', or 'all'
+    const type = searchParams.get('type');
 
     // `withMiddleware` should already handle session and currentUserId,
     // making `req.user.id` available if authentication is successful.

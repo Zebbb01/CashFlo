@@ -1,11 +1,6 @@
 // src/app/dashboard/(data-visualization)/general/page.tsx
 import { Separator } from "@/components/ui/separator";
-
-// Import the new dashboard components
-import { UserSessionDisplay } from "@/components/data-visualization/user-session-display";
-import { KeyMetrics } from "@/components/data-visualization/key-metrics";
-import { ChartsSection } from "@/components/data-visualization/charts-section";
-import { QuickActions } from "@/components/data-visualization/quick-actions";
+import { UserSessionDisplay, KeyMetrics, ChartsSection, QuickActions } from "@/components/data-visualization/general";
 
 export default function GeneralPage() {
   return (
@@ -59,15 +54,15 @@ export default function GeneralPage() {
           <div className="fade-in fade-in-delay-1">
             <UserSessionDisplay />
           </div>
-          
+
           <div className="fade-in fade-in-delay-2">
             <KeyMetrics />
           </div>
-          
+
           <div className="fade-in fade-in-delay-3">
             <ChartsSection />
           </div>
-          
+
           <div className="fade-in fade-in-delay-3">
             <QuickActions />
           </div>

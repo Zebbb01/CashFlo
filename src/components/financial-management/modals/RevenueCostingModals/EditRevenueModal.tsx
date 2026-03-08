@@ -163,7 +163,7 @@ export function EditRevenueModal({ isOpen, onClose, revenue, users, isLoadingUse
                     <SelectItem value="__NULL__">None</SelectItem>
                     {assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.assetName} (Company: {asset.company?.name || 'N/A'})
+                        {asset.assetName}
                       </SelectItem>
                     ))}
                   </SelectContent>

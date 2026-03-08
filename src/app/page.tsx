@@ -4,9 +4,15 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 
 // Import enhanced landing page components
+import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { HeroSection } from "@/components/landing/hero-section";
+import { ProblemSolutionSection } from "@/components/landing/problem-solution";
+import { StatsSection } from "@/components/landing/stats-section";
 import { FeaturesSection } from "@/components/landing/features-section";
+import { TestimonialsSection } from "@/components/landing/testimonials-section";
+import { FaqSection } from "@/components/landing/faq-section";
 import { CtaSection } from "@/components/landing/cta-section";
+import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
@@ -16,21 +22,20 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-transparent to-blue-50/50 dark:from-emerald-950/20 dark:via-transparent dark:to-blue-950/20 pointer-events-none"></div>
-      
-      {/* Main content */}
+    <div className="flex min-h-screen flex-col relative bg-background selection:bg-primary/30">
+      <LandingNavbar />
+
       <main className="relative z-10 flex-1">
-        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-          <HeroSection />
-          <FeaturesSection />
-          <CtaSection />
-        </div>
+        <HeroSection />
+        <ProblemSolutionSection />
+        <StatsSection />
+        <FeaturesSection />
+        <TestimonialsSection />
+        <FaqSection />
+        <CtaSection />
       </main>
-      
-      {/* Footer gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none"></div>
+
+      <LandingFooter />
     </div>
   );
 }

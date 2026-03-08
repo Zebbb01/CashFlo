@@ -1,3 +1,4 @@
+// src\components\financial-management\modals\InvitationModals\InvitationsModal.tsx
 'use client';
 
 import React from "react";
@@ -71,7 +72,7 @@ export function InvitationsModal({ isOpen, onClose, currentUserId }: Invitations
                         Accept
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         onClick={() => handleRespondToInvitation(invitation, 'reject')}
                         disabled={respondToInvitationMutation.isPending}
                       >

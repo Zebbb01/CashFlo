@@ -1,12 +1,34 @@
 // src/components/data-visualization/key-metrics.tsx
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { useFinancialTotals } from "@/hooks/financial-management/useRevenueCost";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function KeyMetrics() {
+  const { totalRevenue, totalCosting, totalAssets, netProfit, isLoading } = useFinancialTotals();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="glass-card h-[140px]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const metrics = [
     {
       title: "Total Assets",
-      value: "₱1,234,567.89",
+      value: `₱${totalAssets.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       description: "Current value of all your assets",
       icon: Wallet,
       gradient: "bg-gradient-primary",
@@ -15,9 +37,9 @@ export function KeyMetrics() {
       delay: 0,
     },
     {
-      title: "Monthly Revenue",
-      value: "₱55,123.45",
-      description: "Income generated this month",
+      title: "Total Revenue",
+      value: `₱${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      description: "Income generated across all sources",
       icon: TrendingUp,
       gradient: "bg-gradient-secondary",
       trend: "+8.2%",
@@ -26,8 +48,8 @@ export function KeyMetrics() {
     },
     {
       title: "Total Expenses",
-      value: "₱21,987.65",
-      description: "All expenditures this month",
+      value: `₱${totalCosting.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      description: "All recorded expenditures",
       icon: TrendingDown,
       gradient: "bg-gradient-accent",
       trend: "-5.1%",
@@ -35,13 +57,13 @@ export function KeyMetrics() {
       delay: 0.2,
     },
     {
-      title: "Net Income",
-      value: "₱33,135.80",
+      title: "Net Profit",
+      value: `₱${Math.abs(netProfit).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       description: "Revenue minus expenses",
       icon: DollarSign,
-      gradient: "bg-gradient-primary",
-      trend: "+15.3%",
-      trendUp: true,
+      gradient: netProfit >= 0 ? "bg-gradient-primary" : "bg-red-500",
+      trend: netProfit >= 0 ? "+15.3%" : "-15.3%",
+      trendUp: netProfit >= 0,
       delay: 0.3,
     },
   ];
@@ -56,12 +78,12 @@ export function KeyMetrics() {
           Your financial performance at a glance
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((metric, index) => (
-          <Card 
-            key={index} 
-            className={`glass-card scale-hover fade-in`} 
+          <Card
+            key={index}
+            className={`glass-card scale-hover fade-in`}
             style={{ animationDelay: `${metric.delay}s` }}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -82,9 +104,8 @@ export function KeyMetrics() {
                 {metric.value}
               </div>
               <div className="flex items-center gap-1">
-                <span className={`text-xs font-medium ${
-                  metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                }`}>
+                <span className={`text-xs font-medium ${metric.trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                  }`}>
                   {metric.trend}
                 </span>
                 <span className="text-xs text-muted-foreground">

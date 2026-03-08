@@ -41,7 +41,8 @@ export function CtaSection() {
               <Button 
                 asChild 
                 size="lg" 
-                className="bg-white text-emerald-600 hover:bg-white/90 px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+                variant="primary"
+                className="rounded-full"
               >
                 <Link href="/signup" className="flex items-center gap-2">
                   Start Your Journey
@@ -53,7 +54,6 @@ export function CtaSection() {
                 variant="outline" 
                 size="lg" 
                 asChild 
-                className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-full backdrop-blur-sm transition-all duration-300"
               >
                 <Link href="/demo">View Demo</Link>
               </Button>

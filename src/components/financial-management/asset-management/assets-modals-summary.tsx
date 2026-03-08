@@ -1,12 +1,9 @@
 'use client';
 
 import React from 'react';
-import { AddCompanyModal } from "../modals/AssetManagementModals/AddCompanyModal";
-import { AddAssetModal } from "../modals/AssetManagementModals/AddAssetModal";
-import { EditAssetModal } from "../modals/AssetManagementModals/EditAssetModal";
-import { ViewAssetModal } from "../modals/AssetManagementModals/ViewAssetModal";
-import { AddBankModal } from "../modals/AssetManagementModals/AddBankModal";
+
 import { Asset, Company, Bank, User } from "@/types";
+import { AddAssetModal, AddBankModal, AddCompanyModal, EditAssetModal, ViewAssetModal } from '../modals/AssetManagementModals';
 
 interface AssetModalsProps {
   isCompanyModalOpen: boolean;

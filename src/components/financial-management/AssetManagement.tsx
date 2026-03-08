@@ -1,3 +1,4 @@
+// src/components/financial-management/AssetManagement.tsx
 'use client';
 
 import React, { useState, useEffect } from "react";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-import { useSession } from "next-auth/react"; // NEW: Import useSession
+import { useSession } from "next-auth/react";
 
 // Hooks
 import {
@@ -15,7 +16,7 @@ import {
 } from "@/hooks/financial-management/useAssets";
 import { useCompanies } from "@/hooks/financial-management/useCompanies";
 import { useBanks } from "@/hooks/financial-management/useBanks";
-import { useUserInvitations } from "@/hooks/financial-management/useInvitations";
+// REMOVE THIS LINE: import { useUserInvitations } from "@/hooks/financial-management/useInvitations";
 import { useUsers } from "@/hooks/auth/useUsers";
 
 // Types
@@ -26,18 +27,12 @@ import { AssetTableSection } from "./asset-management/asset-table-section";
 import { BankTableSection } from "./asset-management/bank-table-section";
 import { AssetModals } from "./asset-management/assets-modals-summary";
 import { ColleagueManagementModal } from "./modals/ColleagueManagementModals/ColleagueManagementModal";
-import { InvitationsModal } from "./modals/InvitationModals/InvitationsModal";
-import { DeleteAssetAlertDialog } from "./dialogs/delete-asset-alert-dialog";
+// REMOVE THIS LINE: import { InvitationsModal } from "./modals/InvitationModals/InvitationsModal";
+import { DeleteAssetAlertDialog } from "./modals/dialogs/delete-asset-alert-dialog";
 
 export function AssetManagement() {
   const { data: session, status } = useSession();
   const currentUserId = session?.user?.id || '';
-
-  useEffect(() => {
-    if (currentUserId) {
-      console.log("Current User ID (Receiver):", currentUserId);
-    }
-  }, [currentUserId]);
 
   // State for general modals
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
@@ -55,15 +50,16 @@ export function AssetManagement() {
   const [isManageColleaguesModalOpen, setIsManageColleaguesModalOpen] = useState(false);
   const [selectedAssetForColleagues, setSelectedAssetForColleagues] = useState<Asset | null>(null);
 
-  // State for Invitation Management
-  const [isViewInvitationsModalOpen, setIsViewInvitationsModalOpen] = useState(false);
+  // REMOVE THIS LINE: State for Invitation Management
+  // REMOVE THIS LINE: const [isViewInvitationsModalOpen, setIsViewInvitationsModalOpen] = useState(false);
 
   // Data Hooks
   const { data: assets, isLoading: isLoadingAssets, error: assetsError } = useAssets();
   const { data: companies, isLoading: isLoadingCompanies, error: companiesError } = useCompanies();
   const { data: banks, isLoading: isLoadingBanks, error: banksError } = useBanks();
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useUsers();
-  const { data: userInvitations, isLoading: isLoadingUserInvitations } = useUserInvitations(currentUserId, 'received');
+  // REMOVE THIS LINE: const { data: userInvitations, isLoading: isLoadingUserInvitations } = useUserInvitations(currentUserId, 'received', 'PENDING');
+
 
   // Mutation Hooks
   const updateAssetMutation = useUpdateAsset();
@@ -136,9 +132,8 @@ export function AssetManagement() {
     setIsManageColleaguesModalOpen(true);
   };
 
-  const handleViewInvitations = () => {
-    setIsViewInvitationsModalOpen(true);
-  };
+  // REMOVE THIS HANDLER: const handleViewInvitations = () => { setIsViewInvitationsModalOpen(true); };
+  // REMOVE THIS LINE: const pendingInvitationsCount = userInvitations?.length || 0;
 
   // If session is still loading, you might want to show a loading state for the whole component
   if (status === "loading") {
@@ -160,15 +155,13 @@ export function AssetManagement() {
       <CardHeader>
         <CardTitle>Asset Management</CardTitle>
         <CardDescription>Add and track your assets, associated companies, and banks.</CardDescription>
+
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <Button variant='outline' onClick={() => setIsCompanyModalOpen(true)}>Add New Company</Button>
-          <Button variant='outline' onClick={() => setIsAssetModalOpen(true)}>Add New Asset</Button>
-          <Button variant='outline' onClick={() => setIsBankModalOpen(true)}>Add New Bank</Button>
-          <Button variant='outline' onClick={handleViewInvitations} disabled={isLoadingUserInvitations || !currentUserId}>
-            View My Invitations ({userInvitations?.length || 0})
-          </Button>
+          <Button variant='default' onClick={() => setIsCompanyModalOpen(true)}>Add New Company</Button>
+          <Button variant='default' onClick={() => setIsAssetModalOpen(true)}>Add New Asset</Button>
+          <Button variant='default' onClick={() => setIsBankModalOpen(true)}>Add New Bank</Button>
         </div>
 
         <AssetTableSection
@@ -218,12 +211,6 @@ export function AssetManagement() {
         onClose={() => setIsManageColleaguesModalOpen(false)}
         selectedAsset={selectedAssetForColleagues}
         users={users || []}
-        currentUserId={currentUserId}
-      />
-
-      <InvitationsModal
-        isOpen={isViewInvitationsModalOpen}
-        onClose={() => setIsViewInvitationsModalOpen(false)}
         currentUserId={currentUserId}
       />
 

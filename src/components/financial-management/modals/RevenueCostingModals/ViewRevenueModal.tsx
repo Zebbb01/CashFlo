@@ -46,7 +46,12 @@ export function ViewRevenueModal({ isOpen, onClose, revenue }: ViewRevenueModalP
             <Label className="text-right font-medium">Bank Asset:</Label>
             <span className="col-span-3">
               {revenue.bankAssetManagement?.assetName || "N/A"}
-              {revenue.bankAssetManagement?.company?.name && ` (Company: ${revenue.bankAssetManagement.company.name})`}
+            </span>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right font-medium">Company:</Label>
+            <span className="col-span-3">
+              {revenue.bankAssetManagement?.company?.name || "N/A"}
             </span>
           </div>
           {/* NEW: Display Recorded By User */}

@@ -30,10 +30,11 @@ export function AuthCard({
           <div className="p-8 md:p-12 relative z-10">
             <div className="flex flex-col items-center text-center mb-8 fade-in">
               {/* Logo */}
-              <div className="mb-6">
-                <h1 className="text-4xl font-bold">
-                  <span className="text-gradient-primary">Cash</span>
-                  <span className="text-gradient-secondary">Flo</span>
+             <div className="mb-6">
+                <h1 className="text-5xl font-bold shimmer-text">
+                  {/* Remove these classes */}
+                  <span>Cash</span>
+                  <span>Flo</span>
                 </h1>
               </div>
               

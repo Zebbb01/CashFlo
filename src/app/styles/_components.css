@@ -1,0 +1,78 @@
+/* src/app/styles/_components.css */
+
+@layer components {
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-destructive {
+    background: var(--destructive);
+    color: var(--primary-foreground);
+    border: none;
+  }
+  .btn-destructive:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Gradient button styles */
+  .btn-gradient-primary {
+    background: var(--gradient-primary);
+    color: var(--primary-foreground);
+    border: none;
+  }
+  .btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-gradient-secondary {
+    background: var(--gradient-secondary);
+    color: var(--primary-foreground);
+    border: none;
+  }
+  .btn-gradient-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+  }
+
+  /* Glass morphism effect */
+  .glass-card {
+    background: var(--gradient-surface);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    color: inherit;
+  }
+  .glass-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Gradient text */
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-secondary {
+    background: var(--gradient-secondary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Scale on hover (transition property) */
+  .scale-hover {
+    transition: transform var(--animation-duration) var(--animation-timing);
+  }
+  .scale-hover:hover {
+    transform: scale(1.01);
+  }
+}

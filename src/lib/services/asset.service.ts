@@ -34,9 +34,19 @@ export class AssetService {
     }
   }
 
-  static async findAll(options: { includeDeleted?: boolean } = {}) {
+  static async findAll(options: { includeDeleted?: boolean, userId?: string } = {}) {
+    const whereClause: any = options.includeDeleted ? {} : { deletedAt: null };
+
+    // If a userId is provided, filter assets where the user is the owner OR is an active partner
+    if (options.userId) {
+      whereClause.OR = [
+        { userId: options.userId },
+        { partnerships: { some: { userId: options.userId, isActive: true } } }
+      ];
+    }
+
     return prisma.assetManagement.findMany({
-      where: options.includeDeleted ? {} : { deletedAt: null },
+      where: whereClause,
       select: {
         id: true,
         assetType: true,

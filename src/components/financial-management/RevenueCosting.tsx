@@ -13,20 +13,13 @@ import {
 } from "@/hooks/financial-management/useRevenueCost";
 import { Revenue, Cost } from "@/types";
 import { useUsers } from "@/hooks/auth/useUsers";
-
-// Import new modular components
 import { RevenueCostingSummary } from "./revenue-costing/revenue-costing-summary";
 import { RevenueSection } from "./revenue-costing/revenue-section";
 import { CostSection } from "./revenue-costing/cost-section";
-import { DeleteConfirmationDialog } from "./dialogs/delete-confirmation-dialog"; // New generic dialog
+import { DeleteConfirmationDialog } from "./modals/dialogs/delete-confirmation-dialog"; // New generic dialog
+import { AddCostModal, AddRevenueModal, EditCostModal, EditRevenueModal, ViewCostModal, ViewRevenueModal } from "./modals/RevenueCostingModals";
 
-// Import all modal components
-import { AddRevenueModal } from "./modals/RevenueCostingModals/AddRevenueModal";
-import { AddCostModal } from "./modals/RevenueCostingModals/AddCostModal";
-import { EditRevenueModal } from "./modals/RevenueCostingModals/EditRevenueModal";
-import { ViewRevenueModal } from "./modals/RevenueCostingModals/ViewRevenueModal";
-import { EditCostModal } from "./modals/RevenueCostingModals/EditCostModal";
-import { ViewCostModal } from "./modals/RevenueCostingModals/ViewCostModal";
+
 
 export function RevenueCosting() {
   // Data fetching hooks
@@ -123,21 +116,6 @@ export function RevenueCosting() {
       setCostToDeleteId(null);
     }
   };
-
-  // Render logic based on loading state
-  if (isLoading || areUsersLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue & Costing</CardTitle>
-          <CardDescription>Track your total revenue and associated costs.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Loading financial data...</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>

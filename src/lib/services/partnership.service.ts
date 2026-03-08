@@ -1,5 +1,6 @@
 // src/lib/services/partnership.service.ts
 import { prisma } from '@/lib/prisma';
+import { PartnershipTransaction } from '@/types/financial';
 
 export class PartnershipService {
   static async getAssetPartnerships(assetId: string) {
@@ -58,18 +59,56 @@ export class PartnershipService {
       prisma.revenueShare.findMany({
         where: { assetId, userId },
         include: {
-          revenue: { select: { id: true, source: true, amount: true, date: true, description: true } }
+          revenue: { select: { id: true, source: true, amount: true, date: true, description: true, userId: true, bankAssetManagementId: true } }
         },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.costAttribution.findMany({
         where: { assetId, userId },
         include: {
-          cost: { select: { id: true, category: true, amount: true, date: true, description: true } }
+          cost: { select: { id: true, category: true, amount: true, date: true, description: true, userId: true, bankAssetManagementId: true } }
         },
         orderBy: { createdAt: 'desc' }
       })
     ]);
+
+    const allPartnershipTransactions: PartnershipTransaction[] = [];
+
+    // Map RevenueShares to PartnershipTransaction (type: 'contribution')
+    revenueShares.forEach(rs => {
+      if (rs.revenue) {
+        allPartnershipTransactions.push({
+          id: rs.id, // Use the ID of the RevenueShare itself for uniqueness in the list
+          amount: rs.shareAmount, // The amount attributed to this partner
+          date: rs.revenue.date,
+          description: rs.revenue.description,
+          userId: rs.userId, // The user from the RevenueShare (the colleague)
+          bankAssetManagementId: rs.assetId, // The asset from the RevenueShare
+          type: 'contribution',
+          source: rs.revenue.source,
+        });
+      }
+    });
+
+    // Map CostAttributions to PartnershipTransaction (type: 'withdrawal')
+    costAttributions.forEach(ca => {
+      if (ca.cost) {
+        allPartnershipTransactions.push({
+          id: ca.id, // Use the ID of the CostAttribution itself for uniqueness in the list
+          amount: ca.attributedAmount, // The amount attributed to this partner
+          date: ca.cost.date,
+          description: ca.cost.description,
+          userId: ca.userId, // The user from the CostAttribution (the colleague)
+          bankAssetManagementId: ca.assetId, // The asset from the CostAttribution
+          type: 'withdrawal',
+          category: ca.cost.category,
+        });
+      }
+    });
+
+    // Sort all transactions by date (most recent first)
+    // Note: It's important to sort by the 'date' property of the *original* revenue/cost, not 'createdAt' of the share/attribution.
+    allPartnershipTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const totalRevenueShare = revenueShares.reduce((sum, rs) => sum + rs.shareAmount, 0);
     const totalCostAttribution = costAttributions.reduce((sum, ca) => sum + ca.attributedAmount, 0);
@@ -78,6 +117,7 @@ export class PartnershipService {
       partnership,
       revenueShares,
       costAttributions,
+      allPartnershipTransactions, // This is the new, unified array
       totals: {
         totalRevenueShare,
         totalCostAttribution,
@@ -85,6 +125,7 @@ export class PartnershipService {
       }
     };
   }
+
 
   static async updatePartnership(
     assetId: string,

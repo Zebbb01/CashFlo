@@ -163,7 +163,7 @@ export function EditCostModal({ isOpen, onClose, cost, users, isLoadingUsers }: 
                     <SelectItem value="__NULL__">None</SelectItem>
                     {assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.assetName} (Company: {asset.company?.name || 'N/A'})
+                        {asset.assetName}
                       </SelectItem>
                     ))}
                   </SelectContent>

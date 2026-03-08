@@ -41,7 +41,7 @@ export function LoginForm() {
           </Alert>
         )}
         
-        <div className="grid gap-4 fade-in fade-in-delay-1">
+        <div className="grid gap-1 fade-in fade-in-delay-1">
           <Label htmlFor="signInEmail" className="text-sm font-medium">
             Email Address
           </Label>
@@ -55,12 +55,12 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isSignInLoading}
-              className="pl-10 h-12 bg-white/50 dark:bg-white/5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
+              className="pl-10 h-12 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
             />
           </div>
         </div>
         
-        <div className="grid gap-4 fade-in fade-in-delay-2">
+        <div className="grid gap-1 fade-in fade-in-delay-2">
           <PasswordInput
             label="Password"
             id="signInPassword"
@@ -69,7 +69,6 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={isSignInLoading}
-            className="h-12 bg-white/50 dark:bg-white/5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300"
           />
         </div>
         
@@ -84,7 +83,7 @@ export function LoginForm() {
         
         <Button 
           type="submit" 
-          className="w-full h-12 btn-gradient-primary rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 group fade-in fade-in-delay-3" 
+          className="fade-in fade-in-delay-3" 
           disabled={isSignInLoading}
         >
           {isSignInLoading ? (
@@ -102,7 +101,7 @@ export function LoginForm() {
             <span className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white dark:bg-gray-900 px-2 text-muted-foreground">
+            <span className="bg-background dark:bg-muted px-2 text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -110,9 +109,8 @@ export function LoginForm() {
         
         <div className="grid grid-cols-1 gap-3 fade-in fade-in-delay-3">
           <Button 
-            variant="outline" 
+            variant="secondary" 
             type="button" 
-            className="w-full h-12 glass-card border-2 hover:bg-white/20 dark:hover:bg-white/5 rounded-xl font-medium transition-all duration-300 group"
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -124,7 +122,7 @@ export function LoginForm() {
           </Button>
         </div>
         
-        <p className="mt-6 text-center text-sm text-muted-foreground fade-in fade-in-delay-3">
+        <p className="text-center text-sm text-muted-foreground fade-in fade-in-delay-3">
           Don&apos;t have an account?{" "}
           <Link 
             href="/signup" 

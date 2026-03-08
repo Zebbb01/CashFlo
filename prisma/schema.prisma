@@ -7,10 +7,27 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
+// =========================================================
+// Enums
+// =========================================================
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+
+
+// =========================================================
+// Authentication & User Management Models
+// These models are typically used in conjunction with NextAuth.js
+// =========================================================
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -44,25 +61,21 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  password      String?
+  password      String? // Consider hashing passwords if stored directly
   accounts      Account[]
   sessions      Session[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-  // Original relations
-  revenues      Revenue[]
-  costs         Cost[]
-  
-  // New: Colleague relationships
-  assetPartnerships     AssetPartnership[]
+
+  // Relationships to core business entities and transactions
+  revenues             Revenue[]
+  costs                Cost[]
+  assetPartnerships    AssetPartnership[]
   revenueShares        RevenueShare[]
   costAttributions     CostAttribution[]
-  
-  // Partnership invitations
   sentInvitations      PartnershipInvitation[] @relation("InvitationSender")
   receivedInvitations  PartnershipInvitation[] @relation("InvitationReceiver")
-  ownedAssets           AssetManagement[] @relation("AssetOwner")
+  ownedAssets          AssetManagement[]       @relation("AssetOwner")
 }
 
 model VerificationToken {
@@ -73,38 +86,16 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// =========================================================
+// Core Business Entities
+// Models representing the main components of your application's domain
+// =========================================================
 model Bank {
   id        String            @id @default(cuid())
   name      String            @unique
   assets    AssetManagement[] @relation("BankAssets")
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
-}
-
-model AssetManagement {
-  id          String    @id @default(cuid())
-  assetType   String
-  companyId   String
-  assetName   String
-  assetValue  Float?
-  bankId      String?
-  userId        String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-
-  // Relations
-  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  bank              Bank?           @relation("BankAssets", fields: [bankId], references: [id])
-  owner           User?           @relation("AssetOwner", fields: [userId], references: [id])
-  revenuesForBank   Revenue[]       @relation("BankAssetRevenues")
-  costsForBank      Cost[]          @relation("BankAssetCosts")
-  
-  // New: Partnership system
-  partnerships      AssetPartnership[]
-  revenueShares     RevenueShare[]
-  costAttributions  CostAttribution[]
-  invitations       PartnershipInvitation[]
 }
 
 model Company {
@@ -116,7 +107,34 @@ model Company {
   assets      AssetManagement[]
 }
 
-// New: Asset Partnership model
+model AssetManagement {
+  id          String    @id @default(cuid())
+  assetType   String
+  companyId   String
+  assetName   String
+  assetValue  Float?
+  bankId      String?
+  userId      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bank              Bank?           @relation("BankAssets", fields: [bankId], references: [id])
+  owner             User?           @relation("AssetOwner", fields: [userId], references: [id])
+  revenuesForBank   Revenue[]       @relation("BankAssetRevenues")
+  costsForBank      Cost[]          @relation("BankAssetCosts")
+  partnerships      AssetPartnership[]
+  revenueShares     RevenueShare[]
+  costAttributions  CostAttribution[]
+  invitations       PartnershipInvitation[]
+}
+
+// =========================================================
+// Transactional & Relationship Models
+// Models detailing interactions, financial data, and partnerships
+// =========================================================
 model AssetPartnership {
   id              String    @id @default(cuid())
   assetId         String
@@ -137,7 +155,6 @@ model AssetPartnership {
   @@index([userId])
 }
 
-// New: Partnership invitation system
 model PartnershipInvitation {
   id          String                    @id @default(cuid())
   assetId     String
@@ -160,14 +177,6 @@ model PartnershipInvitation {
   @@index([senderId])
 }
 
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  EXPIRED
-}
-
-// Enhanced Revenue model with sharing
 model Revenue {
   id                    String           @id @default(cuid())
   source                String
@@ -182,19 +191,16 @@ model Revenue {
   // Relations
   bankAssetManagement AssetManagement? @relation("BankAssetRevenues", fields: [bankAssetManagementId], references: [id])
   user                User?            @relation(fields: [userId], references: [id])
-  
-  // New: Revenue sharing
   revenueShares       RevenueShare[]
 }
 
-// New: Revenue sharing model
 model RevenueShare {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   revenueId   String
   assetId     String
   userId      String
-  shareAmount Float   // Calculated amount based on percentage
-  percentage  Float   // Share percentage at time of revenue
+  shareAmount Float
+  percentage  Float
   createdAt   DateTime @default(now())
 
   // Relations
@@ -207,7 +213,6 @@ model RevenueShare {
   @@index([userId])
 }
 
-// Enhanced Cost model with attribution
 model Cost {
   id                    String           @id @default(cuid())
   category              String
@@ -222,19 +227,16 @@ model Cost {
   // Relations
   bankAssetManagement AssetManagement? @relation("BankAssetCosts", fields: [bankAssetManagementId], references: [id])
   user                User?            @relation(fields: [userId], references: [id])
-  
-  // New: Cost attribution
   costAttributions    CostAttribution[]
 }
 
-// New: Cost attribution model
 model CostAttribution {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   costId       String
   assetId      String
-  userId       String  // User responsible for this cost
-  attributedAmount Float // Amount attributed to this user
-  percentage   Float   // Percentage of total cost
+  userId       String
+  attributedAmount Float
+  percentage   Float
   createdAt    DateTime @default(now())
 
   // Relations

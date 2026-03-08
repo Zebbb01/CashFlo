@@ -1,7 +1,7 @@
 // src/components/financial-management/cost-section.tsx
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable } from "@/components/data-table";
 import { Cost } from "@/types";
 import {
   DropdownMenu,

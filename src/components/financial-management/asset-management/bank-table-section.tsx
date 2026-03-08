@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable } from "@/components/data-table";
 import { Bank } from "@/types";
 
 interface BankTableSectionProps {

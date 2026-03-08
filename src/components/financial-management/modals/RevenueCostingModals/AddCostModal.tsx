@@ -1,5 +1,4 @@
-// src/components/financial-management/modals/AddCostModal.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,13 +15,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useCreateCost } from "@/hooks/financial-management/useRevenueCost";
 import { useAssets } from "@/hooks/financial-management/useAssets";
-import { Asset, User } from "@/types";
+import { User } from "@/types";
+import { useAssetPartnershipsByAsset } from "@/hooks/financial-management/usePartnership";
+import { useSession } from "next-auth/react";
 
 interface AddCostModalProps {
   isOpen: boolean;
   onClose: () => void;
   users: User[];
-  isLoadingUsers: boolean; // NEW: Pass isLoadingUsers as a prop
+  isLoadingUsers: boolean;
 }
 
 export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCostModalProps) {
@@ -32,21 +33,61 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
   const [newCostBankAssetManagementId, setNewCostBankAssetManagementId] = useState<string | null>(null);
   const [incurredByUserId, setIncurredByUserId] = useState<string>("");
   const [isManualAttribution, setIsManualAttribution] = useState(false);
-  const [manualAttributionUserIdsInput, setManualAttributionUserIdsInput] = useState<string>("");
+  const [manualAttributionSelectedUserIds, setManualAttributionSelectedUserIds] = useState<string[]>([]);
+  const [partnersOfSelectedAsset, setPartnersOfSelectedAsset] = useState<User[]>([]);
 
   const { data: assets, isLoading: isLoadingAssets } = useAssets();
   const createCostMutation = useCreateCost();
+  const { data: session } = useSession();
 
-  const currentAuthenticatedUserId = "some-authenticated-user-id"; // REPLACE THIS
+  const { data: assetPartnershipsData, isLoading: isLoadingAssetPartnerships } = useAssetPartnershipsByAsset(
+    newCostBankAssetManagementId || ""
+  );
 
-  React.useEffect(() => {
-    if (currentAuthenticatedUserId && !incurredByUserId) {
-      setIncurredByUserId(currentAuthenticatedUserId);
-    } else if (!currentAuthenticatedUserId && users.length > 0 && !incurredByUserId) {
-      setIncurredByUserId(users[0].id);
+  const currentAuthenticatedUser = users.find(u => u.id === session?.user?.id);
+  const currentAuthenticatedUserId = currentAuthenticatedUser?.id || null;
+
+  useEffect(() => {
+    if (!isLoadingUsers && users.length > 0) {
+      if (currentAuthenticatedUserId && users.some(u => u.id === currentAuthenticatedUserId)) {
+        setIncurredByUserId(currentAuthenticatedUserId);
+      } else if (!incurredByUserId) {
+        setIncurredByUserId(users[0].id);
+      }
+    } else if (!isLoadingUsers && users.length === 0 && !incurredByUserId) {
+      setIncurredByUserId("");
+      console.warn("No users available to set as 'Incurred By'.");
     }
-  }, [currentAuthenticatedUserId, users, incurredByUserId]);
+  }, [currentAuthenticatedUserId, users, isLoadingUsers, incurredByUserId]);
 
+  useEffect(() => {
+    if (isManualAttribution && newCostBankAssetManagementId && assetPartnershipsData && users.length > 0 && assets) {
+      const partnerUserIds = assetPartnershipsData.map((ap: { userId: any; }) => ap.userId);
+      const selectedAsset = assets.find(asset => asset.id === newCostBankAssetManagementId);
+      const ownerId = selectedAsset?.userId;
+
+      const allAttributableUserIds = new Set(partnerUserIds);
+      if (ownerId) {
+        allAttributableUserIds.add(ownerId);
+      }
+
+      const filteredPartnersAndOwner = users.filter(user => allAttributableUserIds.has(user.id));
+      setPartnersOfSelectedAsset(filteredPartnersAndOwner);
+
+      setManualAttributionSelectedUserIds(prev =>
+        prev.filter(id => allAttributableUserIds.has(id))
+      );
+    } else {
+      setPartnersOfSelectedAsset([]);
+      setManualAttributionSelectedUserIds([]);
+    }
+  }, [isManualAttribution, newCostBankAssetManagementId, assetPartnershipsData, users, assets]);
+
+  const handleManualAttributionChange = (userId: string, isChecked: boolean) => {
+    setManualAttributionSelectedUserIds((prev) =>
+      isChecked ? [...prev, userId] : prev.filter((id) => id !== userId)
+    );
+  };
 
   const handleAddCost = async () => {
     if (!newCostCategory || !newCostAmount || !incurredByUserId) {
@@ -72,17 +113,11 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
 
     let attributedToUserIds: string[] | undefined = undefined;
     if (isManualAttribution) {
-      const ids = manualAttributionUserIdsInput.split(',').map(id => id.trim()).filter(id => id);
-      if (ids.length === 0) {
-        toast.warning("Manual Attribution", { description: "Please enter at least one user ID for manual attribution." });
+      if (manualAttributionSelectedUserIds.length === 0) {
+        toast.warning("Manual Attribution", { description: "Please select at least one user for manual attribution." });
         return;
       }
-      const invalidIds = ids.filter(id => !users.some(user => user.id === id));
-      if (invalidIds.length > 0) {
-        toast.error("Invalid User IDs", { description: `The following user IDs are invalid: ${invalidIds.join(', ')}` });
-        return;
-      }
-      attributedToUserIds = ids;
+      attributedToUserIds = manualAttributionSelectedUserIds;
     }
 
     try {
@@ -103,7 +138,7 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
       setNewCostBankAssetManagementId(null);
       setIncurredByUserId("");
       setIsManualAttribution(false);
-      setManualAttributionUserIdsInput("");
+      setManualAttributionSelectedUserIds([]);
       onClose();
     } catch (err: any) {
       toast.error("Failed to add cost", {
@@ -112,9 +147,15 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
     }
   };
 
+  const selectedIncurredByUser = users.find(u => u.id === incurredByUserId);
+  const incurredByUserName = selectedIncurredByUser?.name || selectedIncurredByUser?.email || "Unknown User";
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        // Remove sm:max-w-[425px] or override it
+        className="w-auto min-w-[425px] max-w-[calc(100vw-2rem)] sm:max-w-none md:max-w-max"
+      >
         <DialogHeader>
           <DialogTitle>Add New Cost</DialogTitle>
           <DialogDescription>
@@ -171,6 +212,7 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
                 <Select
                   onValueChange={(value) => {
                     setNewCostBankAssetManagementId(value === '__NULL__' ? null : value);
+                    setManualAttributionSelectedUserIds([]);
                   }}
                   value={newCostBankAssetManagementId || '__NULL__'}
                 >
@@ -181,7 +223,7 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
                     <SelectItem value="__NULL__">None</SelectItem>
                     {assets.map((asset) => (
                       <SelectItem key={asset.id} value={asset.id}>
-                        {asset.assetName} (Company: {asset.company?.name || 'N/A'})
+                        {asset.assetName}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -193,27 +235,18 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="incurredByUser" className="text-right">
+            <Label htmlFor="recordedByUser" className="text-right">
               Incurred By
             </Label>
             <div className="col-span-3">
-              {isLoadingUsers ? ( // Use isLoadingUsers prop here
-                <p>Loading users...</p>
-              ) : users && users.length > 0 ? (
-                <Select onValueChange={setIncurredByUserId} value={incurredByUserId}>
-                  <SelectTrigger id="incurredByUser">
-                    <SelectValue placeholder="Select user who incurred cost" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name || user.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {isLoadingUsers ? (
+                <p>Loading user...</p>
               ) : (
-                <p className="text-muted-foreground text-sm">No users available.</p>
+                <Input
+                  disabled
+                  value={incurredByUserName}
+                  className="col-span-3"
+                />
               )}
             </div>
           </div>
@@ -225,39 +258,76 @@ export function AddCostModal({ isOpen, onClose, users, isLoadingUsers }: AddCost
             <div className="col-span-3 flex items-center space-x-2">
               <Checkbox
                 id="manualAttribution"
+                style={{ cursor: "pointer" }}
                 checked={isManualAttribution}
                 onCheckedChange={(checked: boolean) => {
                   setIsManualAttribution(checked);
                   if (!checked) {
-                    setManualAttributionUserIdsInput("");
+                    setManualAttributionSelectedUserIds([]);
                   }
                 }}
+                disabled={!newCostBankAssetManagementId}
               />
               <span className="text-sm">Specify who to attribute this cost to</span>
+              {!newCostBankAssetManagementId && (
+                <p className="text-xs text-muted-foreground">(Select a bank asset to enable manual attribution)</p>
+              )}
             </div>
           </div>
 
-          {isManualAttribution && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="attributedToUsers" className="text-right">
-                Attribute To (IDs)
+          {isManualAttribution && newCostBankAssetManagementId && (
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="attributedToUsers" className="text-right pt-2">
+                Attribution To
               </Label>
-              <Input
-                id="attributedToUsers"
-                placeholder="Comma-separated user IDs (e.g., user1id, user2id)"
-                value={manualAttributionUserIdsInput}
-                onChange={(e) => setManualAttributionUserIdsInput(e.target.value)}
-                className="col-span-3"
-              />
+              <div className="col-span-3">
+                {isLoadingAssetPartnerships || isLoadingUsers ? (
+                  <p>Loading partners and owner...</p>
+                ) : partnersOfSelectedAsset.length > 0 ? (
+                  <Select
+                    onValueChange={() => { }} // No direct value change for multi-select
+                    value={manualAttributionSelectedUserIds.length > 0 ? manualAttributionSelectedUserIds[0] : ""}
+                  >
+                    <SelectTrigger id="attributedToUsers">
+                      {/* Removed 'truncate' from SelectValue */}
+                      <SelectValue placeholder="Select owner and partners to attribute cost" >
+                        {manualAttributionSelectedUserIds.length > 0
+                          ? manualAttributionSelectedUserIds
+                            .map((id) => partnersOfSelectedAsset.find((user) => user.id === id)?.name || partnersOfSelectedAsset.find((user) => user.id === id)?.email || id)
+                            .join(", ")
+                          : "Select owner and partners to attribute cost"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {partnersOfSelectedAsset.map((user) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center gap-2 p-2 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handleManualAttributionChange(user.id, !manualAttributionSelectedUserIds.includes(user.id))}
+                        >
+                          <Checkbox
+                            checked={manualAttributionSelectedUserIds.includes(user.id)}
+                            onCheckedChange={(checked: boolean) =>
+                              handleManualAttributionChange(user.id, checked)
+                            }
+                          />
+                          <span>{user.name || user.email}</span>
+                        </div>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No partners or owner available for this asset for attribution.</p>
+                )}
+              </div>
             </div>
           )}
-
         </div>
         <DialogFooter>
           <Button
             type="submit"
             onClick={handleAddCost}
-            disabled={createCostMutation.isPending || isLoadingAssets || isLoadingUsers || !incurredByUserId}
+            disabled={createCostMutation.isPending || isLoadingAssets || isLoadingUsers || isLoadingAssetPartnerships || !incurredByUserId}
           >
             {createCostMutation.isPending ? "Adding Cost..." : "Add Cost"}
           </Button>

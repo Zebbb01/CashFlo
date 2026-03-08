@@ -1,79 +1,111 @@
 // src/components/landing/hero-section.tsx
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, Database, TrendingUp, ShieldCheck } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <div className="text-center mb-20 relative">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-r from-violet-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse animation-delay-1000"></div>
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-80 h-80 bg-gradient-to-r from-rose-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse animation-delay-2000"></div>
+    <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+      {/* Background gradients */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-b from-indigo-500/10 to-transparent blur-3xl rounded-full" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-purple-500/10 to-transparent blur-3xl rounded-full" />
       </div>
-      
-      {/* Main content */}
-      <div className="relative z-10">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-full text-sm font-medium text-emerald-700 dark:text-emerald-300 backdrop-blur-sm fade-in">
-          <Sparkles className="w-4 h-4" />
-          <span>New: AI-Powered Financial Insights</span>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+
+        {/* Trust Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full border border-border/50 bg-background/50 backdrop-blur-sm fade-in">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">Enterprise-Grade Financial Clarity for Scaling Businesses</span>
         </div>
-        
-        {/* Main heading */}
-        <h1 className="text-6xl lg:text-7xl font-bold mb-6 fade-in fade-in-delay-1">
-          <span className="text-gradient-primary">Cash</span>
-          <span className="text-gradient-secondary">Flo</span>
+
+        {/* Headline */}
+        <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-foreground mb-6 fade-in fade-in-delay-1 max-w-5xl mx-auto">
+          Scale Revenue Faster With
+          <span className="block text-gradient-primary mt-2">Absolute Financial Precision.</span>
         </h1>
-        
-        {/* Subheading */}
-        <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed fade-in fade-in-delay-2">
-          Take control of your finances with our{" "}
-          <span className="text-gradient-primary font-semibold">intuitive</span> cash flow management
-          platform. Track expenses, manage budgets, and achieve your financial goals with{" "}
-          <span className="text-gradient-secondary font-semibold">AI-powered insights</span>.
+
+        {/* Sub-headline / Problem-Solution */}
+        <p className="text-xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed fade-in fade-in-delay-2">
+          Stop guessing your actual net margins. CashFlo isolates data per-user, automates complex revenue shares, and turns scattered spreadsheets into a single source of truth engineered for growth.
         </p>
-        
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 fade-in fade-in-delay-3">
-          <Button 
-            asChild 
-            size="lg" 
-            className="btn-gradient-primary px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
-          >
-            <Link href="/signup" className="flex items-center gap-2">
-              Get Started Free
-              <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="lg" 
-            asChild 
-            className="px-8 py-6 text-lg font-semibold rounded-full border-2 glass-card hover:bg-white/20 dark:hover:bg-white/5 transition-all duration-300"
-          >
-            <Link href="/login">Sign In</Link>
-          </Button>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 fade-in fade-in-delay-3">
+          <Link href="/signup">
+            <Button size="lg" variant="gradient" className="h-14 px-8 text-base shadow-xl shadow-indigo-500/20 scale-hover w-full sm:w-auto">
+              Start Engineering Revenue
+              <ChevronRight className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button size="lg" variant="outline" className="h-14 px-8 text-base scale-hover w-full sm:w-auto border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground">
+              Sign In to Analytics
+            </Button>
+          </Link>
         </div>
-        
-        {/* Social proof */}
-        <div className="flex flex-col items-center gap-4 fade-in fade-in-delay-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex -space-x-2">
-              {[...Array(5)].map((_, i) => (
-                <div 
-                  key={i}
-                  className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-white text-xs font-bold"
-                >
-                  {String.fromCharCode(65 + i)}
-                </div>
-              ))}
+
+        {/* Dashboard Mockup / Proof Frame */}
+        <div className="relative max-w-5xl mx-auto fade-in fade-in-delay-3">
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-20 pointer-events-none" />
+
+          {/* Glassmorphic Browser Frame */}
+          <div className="rounded-t-2xl border border-b-0 border-border/50 bg-background/30 backdrop-blur-xl shadow-2xl overflow-hidden relative z-10">
+            {/* Browser Header */}
+            <div className="h-12 border-b border-border/50 bg-background/50 flex items-center px-4 gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+              </div>
+              <div className="mx-auto bg-background rounded-md px-32 py-1 border border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+                app.cashflo.finance
+              </div>
             </div>
-            <span>Trusted by 10,000+ users</span>
+
+            {/* Mockup Content Overlay */}
+            <div className="aspect-[16/9] bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-900 p-8 grid grid-cols-3 gap-6 relative">
+
+              {/* Fake Sidebar */}
+              <div className="col-span-1 border-r border-slate-800/50 pr-6 space-y-4">
+                <div className="h-8 w-32 bg-slate-800/50 rounded-md" />
+                <div className="h-4 w-24 bg-slate-800/30 rounded-md mt-12" />
+                <div className="h-4 w-32 bg-slate-800/30 rounded-md" />
+                <div className="h-4 w-20 bg-slate-800/30 rounded-md" />
+              </div>
+
+              {/* Fake Main Content */}
+              <div className="col-span-2 space-y-6">
+                <div className="flex justify-between items-end">
+                  <div className="h-8 w-48 bg-slate-800/50 rounded-md" />
+                  <div className="h-10 w-32 bg-indigo-500/20 rounded-md border border-indigo-500/30" />
+                </div>
+
+                {/* Fake Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-24 bg-slate-800/40 rounded-xl border border-slate-700/30 p-4 space-y-3">
+                      <div className="h-3 w-16 bg-slate-700/50 rounded-full" />
+                      <div className="h-6 w-24 bg-slate-200/80 rounded-md" />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Fake Chart */}
+                <div className="h-48 bg-slate-800/40 rounded-xl border border-slate-700/30 p-4 flex items-end gap-2">
+                  {[40, 70, 45, 90, 65, 100, 80].map((h, i) => (
+                    <div key={i} className="w-full bg-indigo-500/20 rounded-t-sm border-t border-indigo-500/50 transition-all duration-1000" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Overlay Gradient to fade out bottom */}
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0f172a] to-transparent" />
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   );

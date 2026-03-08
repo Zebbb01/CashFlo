@@ -4,7 +4,7 @@
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Shield, Clock } from "lucide-react";
+import { User, Mail, Shield} from "lucide-react";
 
 export function UserSessionDisplay() {
   const { data: session, status } = useSession();
