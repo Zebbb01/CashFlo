@@ -34,16 +34,6 @@ export class BankService {
 
   static async findAll(userId?: string): Promise<BankWithSavings[]> {
     const banks = await prisma.bank.findMany({
-      where: userId ? {
-        assets: {
-          some: {
-            OR: [
-              { userId: userId },
-              { partnerships: { some: { userId: userId, isActive: true } } }
-            ]
-          }
-        }
-      } : {},
       orderBy: {
         createdAt: 'desc',
       },

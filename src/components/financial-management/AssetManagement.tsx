@@ -25,6 +25,7 @@ import { Asset } from "@/types";
 // Nested Components
 import { AssetTableSection } from "./asset-management/asset-table-section";
 import { BankTableSection } from "./asset-management/bank-table-section";
+import { CompanyTableSection } from "./asset-management/company-table-section";
 import { AssetModals } from "./asset-management/assets-modals-summary";
 import { ColleagueManagementModal } from "./modals/ColleagueManagementModals/ColleagueManagementModal";
 // REMOVE THIS LINE: import { InvitationsModal } from "./modals/InvitationModals/InvitationsModal";
@@ -177,6 +178,13 @@ export function AssetManagement() {
           handleDeleteClick={handleDeleteClick}
           updateAssetMutationIsPending={updateAssetMutation.isPending}
           currentUserId={currentUserId}
+        />
+
+        <Separator className="mt-8" />
+
+        <CompanyTableSection
+          companies={companies || []}
+          isLoadingCompanies={isLoadingCompanies}
         />
 
         <Separator className="mt-8" />

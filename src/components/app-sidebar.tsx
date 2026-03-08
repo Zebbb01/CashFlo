@@ -69,7 +69,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Team Overview",
-            url: "#",
+            url: "/dashboard/team-overview",
           },
         ],
       },
@@ -99,18 +99,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navOther: [
       {
         title: "Settings",
-        url: "#",
+        url: "/dashboard/settings",
         icon: Users,
+      },
+      {
+        title: "Quick Actions",
+        url: "/dashboard/quick-actions",
+        icon: Calculator, // Using an available icon
       },
     ],
   };
 
   return (
-    <Sidebar 
-      collapsible="icon" 
-      className={`glass-card transition-all duration-500 ease-in-out ${
-        isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
-      }`}
+    <Sidebar
+      collapsible="icon"
+      className={`glass-card transition-all duration-500 ease-in-out ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+        }`}
       {...props}
     >
       <SidebarHeader className="fade-in">

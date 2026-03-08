@@ -12,6 +12,8 @@ import { useSession } from "next-auth/react"; // Import useSession
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 import { DashboardTransaction } from "@/types/financial"; // Import the unified transaction type
 import { formatCurrency } from "@/lib/formatters";
+import Link from "next/link";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -59,6 +61,32 @@ export default function DashboardPage() {
 
     // Sort by date, most recent first
     return [...revenueTransactions, ...costTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [revenues, costs]);
+
+  // Prepare chart data: group revenues and costs by date
+  const chartData = React.useMemo(() => {
+    if (!revenues && !costs) return [];
+
+    const dataMap: Record<string, { date: string; revenue: number; cost: number; rawDate: Date }> = {};
+
+    const processData = (items: any[], type: 'revenue' | 'cost') => {
+      items.forEach(item => {
+        const rawDate = new Date(item.date);
+        const dateStr = rawDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (!dataMap[dateStr]) {
+          dataMap[dateStr] = { date: dateStr, revenue: 0, cost: 0, rawDate };
+        }
+        dataMap[dateStr][type] += item.amount;
+      });
+    };
+
+    if (revenues) processData(revenues, 'revenue');
+    if (costs) processData(costs, 'cost');
+
+    // Sort chronologically and keep last 30 data points
+    return Object.values(dataMap)
+      .sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime())
+      .slice(-30);
   }, [revenues, costs]);
 
   // Define columns for the DataTable
@@ -266,55 +294,80 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Additional content section */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card glass hover className="fade-in fade-in-delay-2">
+        {/* Analytics & Quick Actions Section */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Financial Overview Chart */}
+          <Card glass hover className="md:col-span-2 fade-in fade-in-delay-2">
             <CardHeader>
-              <CardTitle gradient>Quick Actions</CardTitle>
+              <CardTitle gradient>Financial Overview</CardTitle>
               <CardDescription>
-                Frequently used features and shortcuts
+                Revenue and Costs over the last 30 days
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="gradient" className="w-full" onClick={() => window.location.href = '/dashboard/revenues-costs'}>
-                <DollarSign className="w-4 h-4" />
-                Manage Transactions
-              </Button>
-              <Button variant="gradientSecondary" className="w-full" onClick={() => window.location.href = '/dashboard/assets'}>
-                <Activity className="w-4 h-4" />
-                Manage Assets
-              </Button>
-              <Button variant="outline" className="w-full scale-hover" onClick={() => window.location.href = '/dashboard/general'}>
-                <TrendingUp className="w-4 h-4" />
-                View Reports
-              </Button>
+            <CardContent>
+              <div className="h-[300px] w-full">
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₱${value}`} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" opacity={0.2} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: 'rgba(10, 10, 10, 0.9)', borderColor: '#333', borderRadius: '8px' }}
+                        itemStyle={{ color: '#fff' }}
+                      />
+                      <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" />
+                      <Area type="monotone" dataKey="cost" stroke="#ef4444" fillOpacity={1} fill="url(#colorCost)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex bg-muted/20 rounded-lg items-center justify-center h-full text-muted-foreground">
+                    No data available for visualization
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
-          <Card glass hover className="fade-in fade-in-delay-3">
+          {/* Quick Actions */}
+          <Card glass hover className="md:col-span-1 fade-in fade-in-delay-3">
             <CardHeader>
-              <CardTitle gradient>System Status</CardTitle>
-              <CardDescription>
-                Current system health and performance
-              </CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle gradient>Quick Actions</CardTitle>
+                  <CardDescription>Frequently used features</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Database</span>
-                <Badge variant="default">Online</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">API Services</span>
-                <Badge variant="default">Healthy</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Background Jobs</span>
-                <Badge variant="secondary">Processing</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Cache</span>
-                <Badge variant="default">Optimized</Badge>
-              </div>
+              <Link href="/dashboard/financial-management" className="w-full inline-block">
+                <Button variant="gradient" className="w-full justify-start">
+                  <Activity className="w-4 h-4 mr-2" />
+                  Manage Finances
+                </Button>
+              </Link>
+              <Link href="/dashboard/financial-colleagues" className="w-full inline-block">
+                <Button variant="gradientSecondary" className="w-full justify-start">
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Colleagues
+                </Button>
+              </Link>
+              <Link href="/dashboard/quick-actions" className="w-full inline-block mt-4">
+                <Button variant="outline" className="w-full scale-hover justify-start">
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Open Action Hub
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
