@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Select,
   SelectContent,
@@ -132,10 +133,9 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
             <Label htmlFor="newAssetValue" className="text-right">
               Asset Value (Optional)
             </Label>
-            <Input
+            <CurrencyInput
               id="newAssetValue"
-              type="number"
-              placeholder="e.g., 500000"
+              placeholder="e.g., 500000 (Optional)"
               value={newAssetValue}
               onChange={(e) => setNewAssetValue(e.target.value)}
               className="col-span-3"

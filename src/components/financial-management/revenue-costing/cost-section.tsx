@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
 
 interface CostSectionProps {
   costs: Cost[];
@@ -38,8 +39,8 @@ export function CostSection({
       header: "Amount",
       accessorKey: "amount",
       cell: (row: Cost) => (
-        <span className="text-red-500">
-          -₱{row.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <span className="tabular-nums font-semibold tracking-tight text-red-500">
+          {formatCurrency(-row.amount)}
         </span>
       ),
     },

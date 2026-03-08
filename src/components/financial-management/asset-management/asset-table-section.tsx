@@ -7,6 +7,7 @@ import { DataTable } from "@/components/data-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { Asset } from "@/types"; // Ensure all types are imported
+import { formatCurrency } from "@/lib/formatters";
 
 interface AssetTableSectionProps {
   assets: Asset[];
@@ -85,7 +86,7 @@ export function AssetTableSection({
       header: "Expected Total Value",
       accessorKey: "assetValue",
       cell: (asset: Asset) => (
-        <span>₱{asset.assetValue?.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0"}</span>
+        <span className="tabular-nums font-semibold tracking-tight">{formatCurrency(asset.assetValue || 0)}</span>
       ),
     },
     {

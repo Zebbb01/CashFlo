@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
 
 interface RevenueSectionProps {
   revenues: Revenue[];
@@ -37,7 +38,11 @@ export function RevenueSection({
     {
       header: "Amount",
       accessorKey: "amount",
-      cell: (row: Revenue) => `₱${row.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      cell: (row: Revenue) => (
+        <span className="tabular-nums font-semibold tracking-tight text-green-600">
+          {formatCurrency(row.amount)}
+        </span>
+      ),
     },
     {
       header: "Date",

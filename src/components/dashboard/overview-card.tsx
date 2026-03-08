@@ -30,7 +30,7 @@ export function OverviewCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gradient-primary mb-1">
+        <div className="text-2xl font-bold text-gradient-primary mb-1 tracking-tight tabular-nums">
           {value}
         </div>
         <p className="text-xs text-muted-foreground">

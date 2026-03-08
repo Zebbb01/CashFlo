@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Select,
   SelectContent,
@@ -64,10 +65,10 @@ export function EditAssetModal({ isOpen, onClose, asset, companies, banks, users
     const parsedAssetValue = assetValue === "" ? null : parseFloat(assetValue);
 
     if (assetValue !== "" && isNaN(parsedAssetValue as number)) {
-        toast.error("Invalid Input", {
-            description: "Asset value must be a valid number or left empty.",
-        });
-        return;
+      toast.error("Invalid Input", {
+        description: "Asset value must be a valid number or left empty.",
+      });
+      return;
     }
 
     const bankIdToSend = selectedBankId === '__NULL__' ? null : selectedBankId;
@@ -133,9 +134,8 @@ export function EditAssetModal({ isOpen, onClose, asset, companies, banks, users
             <Label htmlFor="assetValue" className="text-right">
               Asset Value
             </Label>
-            <Input
+            <CurrencyInput
               id="assetValue"
-              type="number"
               placeholder="e.g., 500000 (Optional)"
               value={assetValue}
               onChange={(e) => setAssetValue(e.target.value)}
