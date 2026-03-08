@@ -11,6 +11,7 @@ import { useFinancialTotals, useRevenues, useCosts } from "@/hooks/financial-man
 import { useSession } from "next-auth/react"; // Import useSession
 import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 import { DashboardTransaction } from "@/types/financial"; // Import the unified transaction type
+import { formatCurrency } from "@/lib/formatters";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -81,8 +82,8 @@ export default function DashboardPage() {
     {
       header: "Amount",
       cell: (row: DashboardTransaction) => (
-        <span className={`font-semibold ${row.type === 'revenue' ? 'text-green-500' : 'text-red-500'}`}>
-          {row.type === 'revenue' ? '+' : '-'}${row.amount.toLocaleString()}
+        <span className={`font-semibold tracking-tight tabular-nums ${row.type === 'revenue' ? 'text-green-500' : 'text-red-500'}`}>
+          {row.type === 'revenue' ? '+' : '-'}{formatCurrency(row.amount).replace('₱', '')}
         </span>
       ),
     },
@@ -185,10 +186,10 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground floating" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gradient-primary">
-              ${totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="text-2xl font-bold text-gradient-primary tracking-tight tabular-nums">
+              {formatCurrency(totalRevenue)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {/* Placeholder for actual growth rate logic */}
               +20.1% from last month
             </p>
@@ -203,10 +204,10 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground floating" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gradient-secondary">
-              ${totalCosting.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="text-2xl font-bold text-gradient-secondary tracking-tight tabular-nums">
+              {formatCurrency(totalCosting)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Total expenses recorded
             </p>
           </CardContent>
@@ -220,10 +221,10 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground floating" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              ${netProfit.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className={`text-2xl font-bold tracking-tight tabular-nums ${netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {formatCurrency(netProfit)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Total revenue minus costs
             </p>
           </CardContent>
@@ -237,10 +238,10 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground floating" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gradient-accent">
-              ${totalAssets.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="text-2xl font-bold text-gradient-accent tracking-tight tabular-nums">
+              {formatCurrency(totalAssets)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Current portfolio value
             </p>
           </CardContent>

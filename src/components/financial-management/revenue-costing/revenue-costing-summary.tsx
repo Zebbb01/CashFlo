@@ -1,5 +1,6 @@
 // src/components/financial-management/revenue-costing-summary.tsx
 import React from "react";
+import { formatCurrency } from "@/lib/formatters";
 
 interface RevenueCostingSummaryProps {
   totalAssets: number;
@@ -15,18 +16,18 @@ export function RevenueCostingSummary({
   netProfit,
 }: RevenueCostingSummaryProps) {
   return (
-    <div className="space-y-2 mb-6">
+    <div className="space-y-2 mb-6 tracking-tight tabular-nums">
       <h3 className="text-lg font-semibold">
-        Total Projected Assets: ₱{totalAssets.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        Total Projected Assets: {formatCurrency(totalAssets)}
       </h3>
       <h3 className="text-lg font-semibold text-blue-600">
-        Total Revenue: ₱{totalRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        Total Revenue: {formatCurrency(totalRevenue)}
       </h3>
       <h3 className="text-lg font-semibold text-destructive">
-        Total Costing: -₱{totalCosting.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        Total Costing: {formatCurrency(-totalCosting)}
       </h3>
       <h3 className={`text-lg font-semibold ${netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
-        Net Profit: ₱{netProfit.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        Net Profit: {formatCurrency(netProfit)}
       </h3>
     </div>
   );

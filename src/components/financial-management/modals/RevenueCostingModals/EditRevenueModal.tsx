@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -121,9 +122,8 @@ export function EditRevenueModal({ isOpen, onClose, revenue, users, isLoadingUse
             <Label htmlFor="amount" className="text-right">
               Amount
             </Label>
-            <Input
+            <CurrencyInput
               id="amount"
-              type="number"
               placeholder="e.g., 1000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

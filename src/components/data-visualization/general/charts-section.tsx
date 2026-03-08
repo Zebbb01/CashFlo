@@ -11,6 +11,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart as RechartsPieChart, Pie, Cell, Legend
 } from 'recharts';
+import { formatCurrency } from "@/lib/formatters";
 
 // Define a professional color palette matching the glassmorphism theme
 const COLORS = ['#6366f1', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#3b82f6'];
@@ -103,8 +104,8 @@ export function ChartsSection() {
             <div key={index} className="flex items-center gap-2 text-sm my-1">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               <span className="text-muted-foreground capitalize">{entry.name}:</span>
-              <span className="font-semibold" style={{ color: entry.color }}>
-                ₱{entry.value.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <span className="font-semibold tabular-nums tracking-tight" style={{ color: entry.color }}>
+                {formatCurrency(entry.value)}
               </span>
             </div>
           ))}
