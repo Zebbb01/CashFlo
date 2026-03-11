@@ -22,6 +22,17 @@ enum InvitationStatus {
   EXPIRED
 }
 
+enum BudgetType {
+  REVENUE
+  COST
+}
+
+enum BudgetPeriod {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
 
 
 // =========================================================
@@ -76,6 +87,7 @@ model User {
   sentInvitations      PartnershipInvitation[] @relation("InvitationSender")
   receivedInvitations  PartnershipInvitation[] @relation("InvitationReceiver")
   ownedAssets          AssetManagement[]       @relation("AssetOwner")
+  budgets              Budget[]
 }
 
 model VerificationToken {
@@ -247,4 +259,26 @@ model CostAttribution {
   @@unique([costId, userId])
   @@index([assetId])
   @@index([userId])
+}
+
+// =========================================================
+// Budget Planning
+// =========================================================
+model Budget {
+  id        String       @id @default(cuid())
+  name      String
+  type      BudgetType
+  category  String
+  amount    Float
+  period    BudgetPeriod
+  startDate DateTime
+  endDate   DateTime
+  userId    String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type, category])
 }

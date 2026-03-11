@@ -98,6 +98,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Reports and Export",
             url: "/dashboard/financial-reports",
           },
+          {
+            title: "Budget Planning",
+            url: "/dashboard/financial-budgets",
+          },
         ],
       },
     ],
