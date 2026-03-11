@@ -194,13 +194,17 @@ export default function DashboardPage() {
       description="Welcome to your financial command center"
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" className="scale-hover">
-            Export Data
-          </Button>
-          <Button variant="gradient">
-            <TrendingUp className="w-4 h-4" />
-            View Analytics
-          </Button>
+          <Link href="/dashboard/financial-reports">
+            <Button variant="outline" className="scale-hover">
+              Export Data
+            </Button>
+          </Link>
+          <Link href="/dashboard/financial-reports">
+            <Button variant="gradient">
+              <TrendingUp className="w-4 h-4" />
+              View Analytics
+            </Button>
+          </Link>
         </div>
       }
     >
