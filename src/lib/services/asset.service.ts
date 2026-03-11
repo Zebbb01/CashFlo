@@ -86,10 +86,12 @@ export class AssetService {
   }) {
     return prisma.assetManagement.create({
       data: {
-        ...data,
+        assetType: data.assetType,
+        assetName: data.assetName,
         assetValue: data.assetValue ?? null,
-        bankId: data.bankId ?? null,
-        companyId: data.companyId || undefined,
+        bankId: data.bankId || null,
+        companyId: data.companyId || null,
+        userId: data.userId,
       },
       include: {
         company: true,
