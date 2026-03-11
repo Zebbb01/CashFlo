@@ -41,7 +41,7 @@ export function EditAssetModal({ isOpen, onClose, asset, companies, banks, users
       setAssetType(asset.assetType);
       setAssetName(asset.assetName);
       setAssetValue(asset.assetValue?.toString() || "");
-      setCompanyId(asset.companyId);
+      setCompanyId(asset.companyId || "");
       setSelectedBankId(asset.bankId || null);
       setSelectedOwnerId(asset.userId || "");
     } else {
@@ -55,9 +55,9 @@ export function EditAssetModal({ isOpen, onClose, asset, companies, banks, users
   }, [asset]);
 
   const handleUpdateAsset = async () => {
-    if (!asset || !assetType || !assetName || !companyId || !selectedOwnerId) {
+    if (!asset || !assetType || !assetName || !selectedOwnerId) {
       toast.warning("Missing Fields", {
-        description: "Please fill in all required asset fields (Asset Type, Name, Company, Owner).",
+        description: "Please fill in all required asset fields (Asset Type, Name, Owner).",
       });
       return;
     }
@@ -80,7 +80,7 @@ export function EditAssetModal({ isOpen, onClose, asset, companies, banks, users
           assetType,
           assetName,
           assetValue: parsedAssetValue,
-          companyId,
+          companyId: companyId || undefined,
           bankId: bankIdToSend,
           userId: selectedOwnerId,
         },
@@ -144,25 +144,22 @@ export function EditAssetModal({ isOpen, onClose, asset, companies, banks, users
           </div>
           <div className="space-y-2">
             <Label htmlFor="company" className="text-foreground font-semibold">
-              Company
+              Company <span className="text-muted-foreground font-normal">(Optional)</span>
             </Label>
             <div className="w-full">
-              {companies && companies.length > 0 ? (
-                <Select onValueChange={setCompanyId} value={companyId}>
-                  <SelectTrigger id="company">
-                    <SelectValue placeholder="Select a company" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-muted-foreground text-sm">No companies available.</p>
-              )}
+              <Select onValueChange={(value) => setCompanyId(value === '__NULL__' ? '' : value)} value={companyId || '__NULL__'}>
+                <SelectTrigger id="company">
+                  <SelectValue placeholder="Select a company" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NULL__">None (Personal)</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">

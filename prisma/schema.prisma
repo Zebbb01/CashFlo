@@ -122,7 +122,7 @@ model Company {
 model AssetManagement {
   id          String    @id @default(cuid())
   assetType   String
-  companyId   String
+  companyId   String?
   assetName   String
   assetValue  Float?
   bankId      String?
@@ -132,7 +132,7 @@ model AssetManagement {
   deletedAt   DateTime?
 
   // Relations
-  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company           Company?        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   bank              Bank?           @relation("BankAssets", fields: [bankId], references: [id])
   owner             User?           @relation("AssetOwner", fields: [userId], references: [id])
   revenuesForBank   Revenue[]       @relation("BankAssetRevenues")

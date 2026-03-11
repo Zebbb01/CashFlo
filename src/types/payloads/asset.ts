@@ -2,7 +2,7 @@
 
 export interface CreateAssetPayload {
   assetType: string;
-  companyId: string;
+  companyId?: string;
   assetName: string;
   assetValue?: number | null;
   bankId?: string | null;

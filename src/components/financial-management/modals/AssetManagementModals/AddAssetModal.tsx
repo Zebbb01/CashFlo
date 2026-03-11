@@ -48,9 +48,9 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
   }, [currentUserId, users, selectedOwnerId]);
 
   const handleAddAsset = async () => {
-    if (!newAssetType || !newAssetName || !selectedCompanyId || !selectedOwnerId) {
+    if (!newAssetType || !newAssetName || !selectedOwnerId) {
       toast.warning("Missing Fields", {
-        description: "Please fill in all required asset fields, select a company, and an owner.",
+        description: "Please fill in all required asset fields and select an owner.",
       });
       return;
     }
@@ -74,7 +74,7 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
         assetType: newAssetType,
         assetName: newAssetName,
         assetValue: parsedAssetValue,
-        companyId: selectedCompanyId,
+        companyId: selectedCompanyId || undefined,
         bankId: bankIdToSend,
         userId: selectedOwnerId,
       });
@@ -143,25 +143,22 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
           </div>
           <div className="space-y-2">
             <Label htmlFor="company" className="text-foreground font-semibold">
-              Company
+              Company <span className="text-muted-foreground font-normal">(Optional)</span>
             </Label>
             <div className="w-full">
-              {companies.length > 0 ? (
-                <Select onValueChange={setSelectedCompanyId} value={selectedCompanyId}>
-                  <SelectTrigger id="company">
-                    <SelectValue placeholder="Select a company" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-muted-foreground text-sm">No companies available. Please add a company first.</p>
-              )}
+              <Select onValueChange={(value) => setSelectedCompanyId(value === '__NULL__' ? '' : value)} value={selectedCompanyId || '__NULL__'}>
+                <SelectTrigger id="company">
+                  <SelectValue placeholder="Select a company" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__NULL__">None (Personal)</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">
@@ -221,7 +218,7 @@ export function AddAssetModal({ isOpen, onClose, companies, banks, users, isLoad
             variant="gradient"
             className="w-full max-w-sm"
             onClick={handleAddAsset}
-            disabled={createAssetMutation.isPending || companies.length === 0 || users.length === 0 || !selectedOwnerId}
+            disabled={createAssetMutation.isPending || users.length === 0 || !selectedOwnerId}
           >
             {createAssetMutation.isPending ? "Adding Asset..." : "Add Asset"}
           </Button>

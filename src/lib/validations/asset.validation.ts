@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const createAssetSchema = z.object({
   assetType: z.string().min(1, 'Asset type is required'),
-  companyId: z.string().min(1, 'Company ID is required'),
+  companyId: z.string().optional(),
   assetName: z.string().min(1, 'Asset name is required'),
   assetValue: z.number().optional(),
   bankId: z.string().optional(),

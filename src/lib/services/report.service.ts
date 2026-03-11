@@ -217,7 +217,7 @@ export class ReportService {
       id: asset.id,
       name: asset.assetName,
       type: asset.assetType,
-      company: asset.company.name,
+      company: asset.company?.name || 'Personal',
       value: asset.assetValue || 0,
     }));
 

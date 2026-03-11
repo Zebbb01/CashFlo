@@ -4,7 +4,7 @@ import { AssetManagement, AssetPartnership, Company, Bank } from '@prisma/client
 
 // Define a type for AssetManagement with included relations
 type AssetWithRelations = AssetManagement & {
-  company: Company;
+  company: Company | null;
   bank: Bank | null;
   owner: { id: string; name: string | null; email: string; } | null;
   partnerships: (AssetPartnership & { user: { id: string; name: string | null; email: string; } })[];
@@ -78,7 +78,7 @@ export class AssetService {
 
   static async create(data: {
     assetType: string;
-    companyId: string;
+    companyId?: string;
     assetName: string;
     assetValue?: number;
     bankId?: string;
@@ -89,6 +89,7 @@ export class AssetService {
         ...data,
         assetValue: data.assetValue ?? null,
         bankId: data.bankId ?? null,
+        companyId: data.companyId || undefined,
       },
       include: {
         company: true,
