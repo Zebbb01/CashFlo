@@ -5,3 +5,4 @@ export * from "./prisma";
 export * from "./payloads";
 export * from "./api-response";
 export * from "./financial";
+export * from "./report";

@@ -6,3 +6,4 @@ export * from './revenue.service';
 export * from './bank.service';
 export * from './cost.service';
 export * from './invitation.service';
+export * from './report.service';

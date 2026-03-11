@@ -9,6 +9,7 @@ import {
   Landmark,
   Wallet,
   HomeIcon,
+  FileBarChart,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -92,6 +93,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Colleague Contributions",
             url: "/dashboard/financial-colleagues",
+          },
+          {
+            title: "Reports and Export",
+            url: "/dashboard/financial-reports",
           },
         ],
       },
